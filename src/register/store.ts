@@ -5,7 +5,7 @@ import type { Decision, DecisionStatus } from './types';
 /** The design register, kept in this browser. Separate from token history so adopting is a clear, recorded act. */
 const KEY = 'mercantile-design-lab:register:v1';
 
-interface RegisterState {
+export interface RegisterState {
   decisions: Decision[];
   /** Token values at the moment of the last adoption; edits since then are "not adopted yet". */
   baseline: Record<string, unknown> | null;
@@ -45,6 +45,11 @@ function set(next: RegisterState) {
   }
 }
 
+export const subscribeRegister = (l: () => void) => {
+  listeners.add(l);
+  return () => listeners.delete(l);
+};
+
 export const useRegister = <T,>(sel: (s: RegisterState) => T) =>
   useSyncExternalStore(
     (l) => {
@@ -76,6 +81,10 @@ export const register = {
   },
   setBaseline(values: Record<string, unknown>) {
     set({ ...state, baseline: structuredClone(values) });
+  },
+  /** Replace the whole register (used when the shared cloud copy changes). */
+  replaceAll(next: RegisterState) {
+    set({ decisions: structuredClone(next.decisions ?? []), baseline: next.baseline ? structuredClone(next.baseline) : null });
   },
   /** Restore the starting register compiled from your documents (keeps nothing you adopted here). */
   resetToSeed() {

@@ -53,6 +53,22 @@ Edits in the lab are experiments until adopted; the page lists them under **Chan
 **Adopt these changes** button. Open questions have options and an **Adopt this option** button.
 Decisions are saved in this browser for now (see "Next" below for shared storage).
 
+## Shared lab (cloud) and AI access
+
+The lab can save to Supabase so every browser and every AI sees the same copy, with live updates.
+
+- **Storage:** project `mercantile-labelbook` (`viuruxnnlaovntywpzdk`), tables `lab_state`, `lab_events`, `lab_keys`
+  (see `supabase/migrations/`). They are separate from Labelbook and Reports data and have no client access.
+- **Function:** `supabase/functions/design-lab/` (deployed as `design-lab`). Routes: `/health`, `/state`, `/events`, `/mcp`.
+  Everything except `/health` needs the owner's key (`LAB_KEY` secret) or an extra key whose SHA-256 is in `lab_keys`.
+- **In the lab:** the cloud button in the top bar → enter the lab key → Connect. The first browser uploads its copy;
+  later browsers load the shared one. The same dialog shows the addresses for connecting Claude, ChatGPT and Claude Code.
+- **AI tools (MCP):** `get_overview`, `list_decisions`, `search_tokens`, `get_token`, `propose_change`, `revert_change`,
+  `adopt_changes`, `adopt_option`, `record_decision`. Adopting requires `owner_confirmed: true`, which the tool descriptions
+  allow only after the owner says yes. AI changes appear in the lab live, as "not adopted".
+- **One-time setup:** in Supabase › Edge Functions › Secrets, add `LAB_KEY` (a long random value; keep it like a password).
+- The claude.ai preview link cannot use the cloud (its sandbox blocks outside services). Host the lab on your own site.
+
 ## Modes: Lindemann and Diamond Stop
 
 The lab has two brand modes that share the whole system. Each mode stores only its own overrides.

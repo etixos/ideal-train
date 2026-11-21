@@ -7,6 +7,7 @@ import { Badge, IconButton, NavHeading, NavItem, SegmentedControl, Select, Sideb
 import { MODES, MODE_IDS } from '../tokens/registry';
 import type { ModeId } from '../tokens/types';
 import { CvdFilters } from './CvdFilters';
+import { CloudButton } from '../cloud/CloudButton';
 import { Inspector } from './Inspector';
 import { NAV } from './nav';
 import { href, navigate, useRoute } from './router';
@@ -160,6 +161,7 @@ export function App() {
               <IconButton icon={Redo2} label="Redo" disabled={!redoable} onClick={actions.redo} />
             </Tooltip>
             <div className="m-divider m-divider--vertical" style={{ height: 20 }} />
+            <CloudButton />
             <Tooltip content="Inspect tokens on any element" placement="bottom">
               <IconButton icon={Crosshair} label="Inspect tokens" selected={view.inspect} onClick={() => actions.setView({ inspect: !view.inspect })} />
             </Tooltip>

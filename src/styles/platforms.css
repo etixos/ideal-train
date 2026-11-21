@@ -33,8 +33,8 @@ button.ios-row:active { background: var(--color-surface-pressed); }
 .ipad-cell.is-selected { background: var(--color-accent-default); color: var(--color-accent-on); }
 .ipad-cell.is-selected .c-secondary { color: inherit; opacity: 0.8; }
 
-.platform-stage { overflow: auto; padding: 24px; background: var(--color-bg-sunken); border: var(--border-width-default) solid var(--color-border-subtle); border-radius: var(--radius-container); display: flex; justify-content: center; align-items: flex-start; }
+.platform-stage { overflow: auto; padding: 24px; background: var(--color-bg-sunken); border: var(--border-width-default) solid var(--color-border-subtle); border-radius: var(--radius-container); display: flex; justify-content: safe center; align-items: flex-start; }
 .platform-compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-page-gutter); }
 .platform-compare__cell { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.platform-compare__stage { height: 540px; overflow: hidden; display: flex; justify-content: center; align-items: flex-start; padding: 16px; background: var(--color-bg-sunken); border: var(--border-width-default) solid var(--color-border-subtle); border-radius: var(--radius-container); }
+.platform-compare__stage { height: 540px; overflow: hidden; display: flex; justify-content: safe center; align-items: flex-start; padding: 16px; background: var(--color-bg-sunken); border: var(--border-width-default) solid var(--color-border-subtle); border-radius: var(--radius-container); }
 @media (max-width: 1100px) { .platform-compare { grid-template-columns: minmax(0, 1fr); } }

@@ -16,7 +16,8 @@ import { TOOLS, callTool, type LabState } from './core.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const LAB_KEY = Deno.env.get('LAB_KEY') ?? '';
+// Trimmed: a pasted secret often carries an invisible trailing space or line break.
+const LAB_KEY = (Deno.env.get('LAB_KEY') ?? '').trim();
 const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
 const CORS = {
@@ -34,7 +35,7 @@ async function sha256Hex(s: string) {
 
 /** The owner's LAB_KEY, or an extra key whose SHA-256 fingerprint is in lab_keys and not revoked. */
 async function authorized(req: Request, url: URL) {
-  const given = req.headers.get('x-lab-key') ?? req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? url.searchParams.get('key') ?? '';
+  const given = (req.headers.get('x-lab-key') ?? req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? url.searchParams.get('key') ?? '').trim();
   if (given.length < 16) return false;
   const a = await sha256Hex(given);
   if (LAB_KEY) {

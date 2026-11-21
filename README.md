@@ -34,6 +34,25 @@ to download configurations and token files.
 | 13 | Theme Editor | Every token: search, edit, link, usage inspection, undo/redo, presets, side-by-side comparison |
 | 14 | Documentation & Export | JSON tokens, CSS variables, SwiftUI, Markdown docs; saved configurations; import |
 
+## Decisions and the words we use
+
+The **Decisions** page lists every design decision with a plain status: **Needs your decision**, **Approved**,
+**Testing**, **Idea**, **Retired** (your Source Index's Conflict / Approved / Provisional / Exploratory / Superseded).
+It started from `etixos/mercantile-design-system` (main, 5861d32) and the seven app repositories; every entry names its source.
+A **Your apps** tab shows each app's brand, accent, where its styling lives, and how many stray colors it has.
+
+Fixed vocabulary, also written into the exported documentation for every AI:
+
+| Word | Meaning |
+|---|---|
+| **Adopt** | Make it the Mercantile rule. Updates the lab and records the decision with today's date. |
+| **Apply** | Bring one app up to the current Mercantile rules. |
+| **Publish** | Release an app's own work. Never used for design decisions. |
+
+Edits in the lab are experiments until adopted; the page lists them under **Changes not adopted yet** with an
+**Adopt these changes** button. Open questions have options and an **Adopt this option** button.
+Decisions are saved in this browser for now (see "Next" below for shared storage).
+
 ## Modes: Lindemann and Diamond Stop
 
 The lab has two brand modes that share the whole system. Each mode stores only its own overrides.

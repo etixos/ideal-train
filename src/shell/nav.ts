@@ -2,6 +2,7 @@ import {
   Accessibility,
   AppWindow,
   BarChart3,
+  ClipboardCheck,
   Blocks,
   FileText,
   Home,
@@ -25,6 +26,7 @@ export interface NavEntry {
 
 export const NAV: NavEntry[] = [
   { path: 'overview', label: 'Overview', icon: Home, group: 'Foundations' },
+  { path: 'decisions', label: 'Decisions', icon: ClipboardCheck, group: 'Foundations' },
   { path: 'colors', label: 'Colors', icon: Palette, group: 'Foundations' },
   { path: 'typography', label: 'Typography', icon: Type, group: 'Foundations' },
   { path: 'shapes', label: 'Shapes & Geometry', icon: Shapes, group: 'Foundations' },

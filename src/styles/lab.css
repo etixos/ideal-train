@@ -225,3 +225,10 @@ button.token-row__id:hover { text-decoration: underline; }
 .lab-scope--mode { border-color: var(--color-highlight-default); background: var(--color-highlight-subtle); }
 .token-row__tag--mode { color: var(--color-highlight-text); border-color: var(--color-highlight-default); background: var(--color-highlight-subtle); }
 .font-status { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-caption-size); }
+
+/* Decisions */
+.decision-option { display: flex; gap: var(--space-component-lg); align-items: flex-start; padding: var(--space-component-default) var(--space-component-lg); border: var(--border-width-default) solid var(--color-border-subtle); border-radius: var(--radius-control); cursor: pointer; background: var(--color-surface-default); }
+.decision-option:hover { border-color: var(--color-border-strong); }
+.decision-option.is-selected { border-color: var(--color-accent-default); box-shadow: inset 0 0 0 1px var(--color-accent-default); }
+.decision-option input { margin-top: 3px; accent-color: var(--color-accent-default); }
+.decision-option:has(input:disabled) { cursor: default; }

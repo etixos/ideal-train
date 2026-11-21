@@ -11,6 +11,7 @@ import { Inspector } from './Inspector';
 import { NAV } from './nav';
 import { href, navigate, useRoute } from './router';
 import { Overview } from '../sections/Overview';
+import { Decisions, usePendingCount, useWaitingCount } from '../sections/Decisions';
 import { Colors } from '../sections/Colors';
 import { Typography } from '../sections/Typography';
 import { Shapes } from '../sections/Shapes';
@@ -27,6 +28,7 @@ import { ExportSection } from '../sections/Export';
 
 const PAGES: Record<string, ComponentType<{ sub?: string }>> = {
   overview: Overview,
+  decisions: Decisions,
   colors: Colors,
   typography: Typography,
   shapes: Shapes,
@@ -60,8 +62,9 @@ export function App() {
   const view = useView();
   const undoable = useLab(canUndo);
   const redoable = useLab(canRedo);
-  const modified = Object.keys(theme.values).length;
   const [navOpen, setNavOpen] = useState(false);
+  const waiting = useWaitingCount();
+  const pending = usePendingCount();
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -102,7 +105,7 @@ export function App() {
             <div key={g} style={{ display: 'contents' }}>
               <NavHeading>{g}</NavHeading>
               {NAV.filter((n) => n.group === g).map((n) => (
-                <NavItem key={n.path} icon={n.icon} label={n.label} href={href(n.path)} selected={section === n.path} meta={<span className="lab-nav__num">{NAV.indexOf(n) + 1}</span>} />
+                <NavItem key={n.path} icon={n.icon} label={n.label} href={href(n.path)} selected={section === n.path} meta={n.path === 'decisions' && waiting > 0 ? <Badge count tone="danger">{waiting}</Badge> : <span className="lab-nav__num">{NAV.indexOf(n) + 1}</span>} />
               ))}
             </div>
           ))}
@@ -135,12 +138,14 @@ export function App() {
                 { value: 'mode', label: `Edits apply to ${MODES[view.mode].label} only` },
               ]}
             />
-            {modified > 0 && (
-              <span className="lab-topbar__hide-sm">
-                <Badge tone="highlight" dot>
-                  {modified} modified
+            {(waiting > 0 || pending > 0) && (
+              <button type="button" className="lab-topbar__hide-sm" style={{ background: 'none', border: 0, padding: 0, cursor: 'pointer' }} onClick={() => navigate('decisions')} title="Open Decisions">
+                <Badge tone={waiting ? 'danger' : 'highlight'} dot>
+                  {waiting > 0 ? `${waiting} need your decision` : ''}
+                  {waiting > 0 && pending > 0 ? ' · ' : ''}
+                  {pending > 0 ? `${pending} not adopted` : ''}
                 </Badge>
-              </span>
+              </button>
             )}
             {view.cvd !== 'none' && (
               <span className="lab-topbar__hide-sm">

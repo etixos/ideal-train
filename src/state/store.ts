@@ -231,6 +231,25 @@ export const actions = {
   renameTheme(name: string) {
     commit({ ...state.theme, name }, 'rename');
   },
+  /**
+   * Write adopted decision values into the shared theme (both modes), whatever the current edit scope.
+   * A patch may set a whole value or only the light / dark side of a color. Undoable.
+   */
+  applyValuePatch(patch: Record<string, string | { light?: string; dark?: string }>, key = '') {
+    const values = { ...state.theme.values };
+    for (const [id, p] of Object.entries(patch)) {
+      const def = TOKEN_MAP.get(id);
+      if (!def) continue;
+      if (typeof p === 'string') values[id] = p;
+      else {
+        const cur = values[id] ?? def.value;
+        const base = typeof cur === 'object' ? cur : { light: cur, dark: cur };
+        values[id] = { ...base, ...(p.light ? { light: p.light } : {}), ...(p.dark ? { dark: p.dark } : {}) };
+      }
+      if (valuesEqual(values[id], def.value)) delete values[id];
+    }
+    commit({ ...state.theme, values }, key);
+  },
   /** Replace the working theme (preset, saved configuration, or import). Undoable. */
   applyTheme(theme: ThemeDoc, opts: { keepModes?: boolean } = {}) {
     commit({ ...clone(theme), ...(opts.keepModes ? { modes: clone(state.theme.modes) } : {}) });

@@ -44,7 +44,7 @@ function resolvedModes(theme: ThemeDoc, id: string, platform?: Platform, app?: A
 }
 
 /** Structured, portable JSON (W3C Design Tokens–style, with `$value` references in `{token.id}` form). */
-export function toJSON(theme: ThemeDoc, source: ThemeDoc = theme): string {
+export function toJSON(theme: ThemeDoc, source: ThemeDoc = theme, decisions?: DecisionSummary[]): string {
   const merged = mergedValues(theme);
   const tree: Record<string, any> = {};
   for (const d of TOKENS) {
@@ -83,6 +83,7 @@ export function toJSON(theme: ThemeDoc, source: ThemeDoc = theme): string {
       tokens: tree,
       platforms,
       apps,
+      ...(decisions ? { decisions } : {}),
       /** Re-importable form: only the overrides relative to the Mercantile defaults. */
       mercantile: { id: source.id, name: source.name, description: source.description, density: source.density, values: source.values, modes: source.modes, platforms: source.platforms, apps: source.apps },
     },
@@ -512,7 +513,37 @@ function tokenTable(theme: ThemeDoc, list: TokenDef[], withRaw = true) {
   return `| Token | ${withRaw ? 'Defined as | ' : ''}Resolved (light / dark) | Purpose |\n|---|${withRaw ? '---|' : ''}---|---|\n${rows.join('\n')}\n`;
 }
 
-export function toMarkdown(theme: ThemeDoc, audit?: { label: string; mode: string; ratio: number; pass: boolean; min: number }[][]): string {
+export interface DecisionSummary {
+  id: string;
+  title: string;
+  summary: string;
+  status: string;
+  scope: string[];
+  date?: string;
+  source: string;
+  chosen?: string;
+  options?: { id: string; label: string }[];
+}
+
+const STATUS_WORD: Record<string, string> = { 'needs-decision': 'Needs owner decision', testing: 'Testing (provisional)', approved: 'Approved', idea: 'Idea (exploratory)', retired: 'Retired (superseded)' };
+
+function decisionsMarkdown(decisions: DecisionSummary[]) {
+  let md = `## Decision register\n\nStatuses: **Approved** is the rule within its scope. **Testing** is provisional but shared. **Needs owner decision** must not be settled by an assistant. **Idea** must not be implemented. **Retired** must not be restored.\n\n`;
+  for (const st of ['approved', 'needs-decision', 'testing', 'idea', 'retired']) {
+    const list = decisions.filter((d) => d.status === st);
+    if (!list.length) continue;
+    md += `### ${STATUS_WORD[st]}\n\n`;
+    for (const d of list) {
+      const chosen = d.chosen && d.options ? ` Chosen: ${d.options.find((o) => o.id === d.chosen)?.label ?? d.chosen}.` : '';
+      const opts = st === 'needs-decision' && d.options ? ` Options: ${d.options.map((o) => o.label).join(' / ')}.` : '';
+      md += `- **${d.id} · ${d.title}** (${d.scope.join(', ')}${d.date ? `; ${d.date}` : ''}): ${d.summary}${chosen}${opts} _Source: ${d.source}_\n`;
+    }
+    md += '\n';
+  }
+  return md;
+}
+
+export function toMarkdown(theme: ThemeDoc, audit?: { label: string; mode: string; ratio: number; pass: boolean; min: number }[][], decisions?: DecisionSummary[]): string {
   const by = (pred: (d: TokenDef) => boolean) => TOKENS.filter(pred);
   const groups = (list: TokenDef[]) => {
     const m = new Map<string, TokenDef[]>();
@@ -533,6 +564,7 @@ export function toMarkdown(theme: ThemeDoc, audit?: { label: string; mode: strin
   md += `5. **Accessibility is required.** Meet WCAG 2.2 AA contrast (4.5:1 text, 3:1 large text and UI). Never use color alone: pair status color with an icon or symbol and a word. Show a visible focus ring (\`color.focus.ring\`). Touch targets are at least \`size.touch.min\` (44 pt). Honor Dynamic Type and Reduce Motion.\n`;
   md += `6. **Character.** Understated, traditional, refined, practical. Restrained corner radii, hairline borders instead of heavy shadows, no gradients, no oversized controls, no decoration that carries no information.\n`;
   md += `7. **Application accents.** An application may override only the \`color.accent.*\` family (see Application accents below). Everything else stays shared.\n\n`;
+  md += `## Words with fixed meanings\n\nUse these exactly when talking with the owner:\n\n- **Adopt**: make something the Mercantile rule. It updates the design lab and is recorded in the decision register. Ask "Do you want to adopt these changes?" only for design-system decisions.\n- **Apply**: bring one app up to the current Mercantile rules ("Apply Mercantile to Shifts"). Never change shared rules while applying.\n- **Publish**: release an app's own work. Never use it to mean a design decision.\n\nWhen work in an app produces a design change worth sharing, finish the app work, then ask the owner whether to **adopt** it. Do not adopt on the owner's behalf.\n\n`;
   md += `## Token architecture\n\n| Layer | Count | Purpose |\n|---|---|---|\n| Foundation | ${by((d) => d.layer === 'foundation').length} | Raw primitives: palette, scales, durations |\n| Semantic | ${by((d) => d.layer === 'semantic').length} | Purpose-based roles with light/dark values |\n| Component | ${by((d) => d.layer === 'component').length} | Per-component mappings to semantic tokens |\n\nReferences use \`{token.id}\` syntax. Theme density: **${theme.density}** (×${DENSITY_FACTOR[theme.density]} on spacing and control sizes).\n\n`;
   md += `## Color\n\n### Foundation palette\n\n${tokenTable(theme, by((d) => d.group === 'Palette / Foundation'), false)}\n`;
   md += `### Semantic colors\n\n${tokenTable(theme, by((d) => d.layer === 'semantic' && d.category === 'color'))}\n`;
@@ -571,6 +603,7 @@ export function toMarkdown(theme: ThemeDoc, audit?: { label: string; mode: strin
     md += `## Accessibility audit\n\n${flat.length - fails.length} of ${flat.length} contrast checks pass WCAG AA across light, dark and high-contrast modes.\n\n`;
     if (fails.length) md += `| Pair | Mode | Ratio | Required |\n|---|---|---|---|\n${fails.map((f) => `| ${f.label} | ${f.mode} | ${f.ratio.toFixed(2)} | ${f.min} |`).join('\n')}\n\n`;
   }
+  if (decisions?.length) md += decisionsMarkdown(decisions);
   md += `## Changes from the Mercantile defaults\n\n`;
   const changed = Object.keys(theme.values);
   md += changed.length ? changed.map((id) => `- \`${id}\`: ${JSON.stringify(theme.values[id])}`).join('\n') + '\n' : 'None. This theme uses the default Mercantile values.\n';

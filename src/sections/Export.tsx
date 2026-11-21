@@ -3,6 +3,7 @@ import { useMemo, useRef, useState } from 'react';
 import { Page, Section } from '../lab/Page';
 import { actions, useLab, useTheme, useView } from '../state/store';
 import { flattenMode } from '../tokens/resolve';
+import { getRegister, useRegister } from '../register/store';
 import { MODES, MODE_IDS } from '../tokens/registry';
 import type { ModeId } from '../tokens/types';
 import { download, slug, toCSS, toJSON, toMarkdown, toSwift } from '../tokens/export';
@@ -22,6 +23,7 @@ export function ExportSection() {
   const view = useView();
   const [modeSel, setModeSel] = useState<ModeId | null>(null);
   const mode = modeSel ?? view.mode;
+  const decisionsVersion = useRegister((s) => s.decisions);
   /** Exports describe one mode: shared values with that mode's overrides applied. */
   const theme = useMemo(() => flattenMode(fullTheme, mode), [fullTheme, mode]);
   const saved = useLab((s) => s.saved);
@@ -33,11 +35,11 @@ export function ExportSection() {
   const [snapName, setSnapName] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const output = useMemo(() => {
-    if (fmt === 'json') return toJSON(theme, fullTheme);
+    if (fmt === 'json') return toJSON(theme, fullTheme, getRegister().decisions);
     if (fmt === 'css') return toCSS(theme);
     if (fmt === 'swift') return toSwift(theme);
-    return toMarkdown(theme, runAudit(theme));
-  }, [fmt, theme, fullTheme]);
+    return toMarkdown(theme, runAudit(theme), getRegister().decisions);
+  }, [fmt, theme, fullTheme, decisionsVersion]);
   const f = FORMATS.find((x) => x.value === fmt)!;
   const name = slug(`${fullTheme.name} ${MODES[mode].label}`);
 
@@ -91,7 +93,7 @@ export function ExportSection() {
             <Button
               icon={Download}
               onClick={() => {
-                FORMATS.forEach((x, i) => setTimeout(() => download(x.file(name), x.value === 'json' ? toJSON(theme, fullTheme) : x.value === 'css' ? toCSS(theme) : x.value === 'swift' ? toSwift(theme) : toMarkdown(theme, runAudit(theme)), x.mime), i * 250));
+                FORMATS.forEach((x, i) => setTimeout(() => download(x.file(name), x.value === 'json' ? toJSON(theme, fullTheme, getRegister().decisions) : x.value === 'css' ? toCSS(theme) : x.value === 'swift' ? toSwift(theme) : toMarkdown(theme, runAudit(theme), getRegister().decisions), x.mime), i * 250));
               }}
             >
               Download all four

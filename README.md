@@ -68,6 +68,9 @@ The lab can save to Supabase so every browser and every AI sees the same copy, w
   allow only after the owner says yes. AI changes appear in the lab live, as "not adopted".
 - **One-time setup:** in Supabase › Edge Functions › Secrets, add `LAB_KEY` (a long random value; keep it like a password).
 - The claude.ai preview link cannot use the cloud (its sandbox blocks outside services). Host the lab on your own site.
+- **Live site:** https://lab.lindemannstore.com (Hostinger, account u154019312, static site). To update it, run
+  `npm run build`, zip the contents of `dist/`, upload the zip to the site root and deploy it as a static archive
+  (Hostinger operations `hosting_files_generate-upload-url` and `hosting_websites_deploy-static-site-archive`).
 
 ## Modes: Lindemann and Diamond Stop
 

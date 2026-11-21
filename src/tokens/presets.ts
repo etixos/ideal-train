@@ -75,7 +75,8 @@ export const PRESETS: ThemeDoc[] = [
       'text.title1.family': '{font.family.sans}',
       'text.title2.family': '{font.family.sans}',
       'report.heading.family': '{font.family.sans}',
-      'palette.ivory': '#F2F2EE',
+      'palette.stone.canvas': '#E4E4DF',
+      'palette.stone.panel': '#F5F5F1',
     },
   }),
   makeTheme({
@@ -84,9 +85,9 @@ export const PRESETS: ThemeDoc[] = [
     description: 'Warmer paper, brick tint, softer corners, comfortable density.',
     density: 'comfortable',
     values: {
-      'palette.ivory': '#F6F0E2',
-      'palette.linen': '#DDD6C4',
-      'palette.neutral.100': '#ECE5D4',
+      'palette.stone.canvas': '#E6DECB',
+      'palette.stone.secondary': '#F0E9D8',
+      'palette.stone.panel': '#F9F3E5',
       'color.accent.default': ld('{palette.brick.500}', '{palette.brick.300}'),
       'color.accent.hover': ld('{palette.brick.600}', '{palette.brick.200}'),
       'color.accent.pressed': ld('{palette.brick.700}', '{palette.brick.100}'),

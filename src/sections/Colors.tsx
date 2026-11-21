@@ -59,7 +59,7 @@ export function Colors() {
         editor={
           <EditorTabs
             tabs={[
-              { id: 'found', label: 'Foundation', prefix: ['palette.ink', 'palette.charcoal', 'palette.slate', 'palette.stone', 'palette.linen', 'palette.ivory', 'palette.white', 'palette.brick', 'palette.brass'] },
+              { id: 'found', label: 'Foundation', prefix: ['palette.stone', 'palette.coal', 'palette.ink', 'palette.charcoal', 'palette.slate', 'palette.stone', 'palette.linen', 'palette.ivory', 'palette.white', 'palette.brick', 'palette.brass'] },
               { id: 'scales', label: 'Scales', prefix: ['palette.neutral', 'palette.moss', 'palette.amber', 'palette.denim', 'palette.teal', 'palette.plum', 'palette.clay', 'palette.sage'] },
               { id: 'sem', label: 'Semantic', prefix: ['color.bg', 'color.surface', 'color.text', 'color.border', 'color.accent', 'color.highlight', 'color.focus'] },
               { id: 'status', label: 'Status', prefix: ['color.status', 'color.overlay', 'color.shadow'] },
@@ -67,7 +67,23 @@ export function Colors() {
           />
         }
       >
-        <Section title="Foundation palette" description="Provisional values. Pick a new color on any swatch; ratings show contrast against Ink and Ivory.">
+        <Section title="Warm Stone & Ivory" description="Light mode, from Mailbox (the reference app). Adopted 2026-11-21 (D-001). Pick a new color on any swatch; the change shows as “not adopted” in Decisions.">
+          <div className="swatch-grid">
+            {['canvas', 'secondary', 'selected', 'panel', 'field', 'ink', 'inkSecondary', 'inkTertiary', 'ruleInternal', 'borderCard', 'ruleStrong', 'fieldEdge'].map((c) => (
+              <ColorSwatch key={c} id={`palette.stone.${c}`} />
+            ))}
+          </div>
+        </Section>
+
+        <Section title="Charcoal & Ivory" description="Dark mode: the Mailbox / Reports / Count palette. Adopted 2026-11-21 (D-002).">
+          <div className="swatch-grid">
+            {['canvas', 'secondary', 'panel', 'hover', 'field', 'selected', 'ink', 'inkSecondary', 'inkTertiary', 'ruleInternal', 'borderCard', 'fieldEdge'].map((c) => (
+              <ColorSwatch key={c} id={`palette.coal.${c}`} />
+            ))}
+          </div>
+        </Section>
+
+        <Section title="Accent and chart hues" description="The original brief’s colors. Brick and brass are used for status, highlights and charts; the neutral surfaces now come from the palettes above.">
           <div className="swatch-grid">
             {FOUNDATION.map((c) => (
               <ColorSwatch key={c} id={`palette.${c}`} />

@@ -7,7 +7,10 @@ import { useResolvedTokens } from '../theme/ThemeScope';
 import { MODES, TOKENS } from '../tokens/registry';
 import { Badge, Button, Card, Icon } from '../ui';
 
-const FOUNDATION = ['ink', 'charcoal', 'slate', 'stone', 'linen', 'ivory', 'white', 'brick', 'brass'];
+const FOUNDATION: [string, string][] = [
+  ['Canvas', 'palette.stone.canvas'], ['Secondary', 'palette.stone.secondary'], ['Panel', 'palette.stone.panel'], ['Field', 'palette.stone.field'], ['Card border', 'palette.stone.borderCard'], ['Heritage ink', 'palette.stone.ink'],
+  ['Charcoal', 'palette.coal.canvas'], ['Panel (dark)', 'palette.coal.panel'], ['Ivory text', 'palette.coal.ink'],
+];
 
 const STATUS: [string, 'success' | 'warning' | 'neutral', string][] = [
   ['Design-token engine', 'success', 'Three layers, light/dark/high-contrast, platform and app overrides.'],
@@ -47,13 +50,13 @@ export function Overview() {
         </>
       }
     >
-      <div className="ramp" aria-label="Foundation palette">
-        {FOUNDATION.map((c) => {
-          const bg = t[`palette.${c}`];
-          const dark = ['ink', 'charcoal', 'slate', 'brick'].includes(c);
+      <div className="ramp" aria-label="Warm Stone & Ivory and Charcoal & Ivory">
+        {FOUNDATION.map(([c, id]) => {
+          const bg = t[id];
+          const dark = ['Heritage ink', 'Charcoal', 'Panel (dark)'].includes(c);
           return (
             <div key={c} className="ramp__step" style={{ background: bg, height: 92, color: dark ? '#F4F1E9' : '#242A28' }}>
-              <span style={{ fontFamily: 'var(--font-family-sans)', fontSize: 12, fontWeight: 600, textTransform: 'capitalize' }}>{c}</span>
+              <span style={{ fontFamily: 'var(--font-family-sans)', fontSize: 12, fontWeight: 600 }}>{c}</span>
               <span>{bg}</span>
             </div>
           );
@@ -84,8 +87,8 @@ export function Overview() {
       <Section title="How the system is layered" description="Applications reference semantic and component tokens, never raw values. Change a foundation color and everything that refers to it updates.">
         <div className="grid grid--3">
           {[
-            ['Foundation', 'palette.charcoal = #414B43', 'Raw colors, dimensions, type scales, durations.'],
-            ['Semantic', 'color.accent.default → {palette.neutral.700}', 'Roles such as color.text.primary or space.component.default, with light and dark values.'],
+            ['Foundation', 'palette.stone.canvas = #E0DED4', 'Raw colors, dimensions, type scales, durations.'],
+            ['Semantic', 'color.bg.app → {palette.stone.canvas}', 'Roles such as color.text.primary or space.component.default, with light and dark values.'],
             ['Component', 'button.primary.bg → {color.accent.default}', 'What each component consumes. Restyle one component without touching others.'],
           ].map(([name, ex, desc], i) => (
             <Card key={name} padded>

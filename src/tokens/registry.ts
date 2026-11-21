@@ -40,6 +40,46 @@ add('foundation', 'color', 'Palette / Foundation', 'color', {
   'palette.brass': { v: '#B18A55', d: 'Highlight, focus, and secondary accent.' },
 });
 
+/* Established Mercantile neutrals, from Mailbox web/theme.css (the reference implementation).
+   Adopted by the owner 2026-11-21: D-001 (Warm Stone & Ivory) and D-002 (Mailbox / Reports / Count dark). */
+add('foundation', 'color', 'Palette / Warm Stone & Ivory (light)', 'color', {
+  'palette.stone.canvas': { v: '#E0DED4', d: 'Warm stone: the canvas behind everything.' },
+  'palette.stone.secondary': { v: '#EEECE3', d: 'Secondary surface: sidebars, hover, sunken areas.' },
+  'palette.stone.selected': { v: '#E2E0D6', d: 'Selected rows.' },
+  'palette.stone.panel': { v: '#F7F5ED', d: 'Warm ivory: headers and panels.' },
+  'palette.stone.field': { v: '#FFFDF9', d: 'Field ivory: editors, inputs, popovers.' },
+  'palette.stone.ink': { v: '#2E241A', d: 'Heritage ink: primary text.' },
+  'palette.stone.inkSecondary': { v: '#62625D', d: 'Secondary text. #70706B (the recorded value) fails 4.5:1 on the canvas; this is MercantileKit’s fix.' },
+  'palette.stone.inkTertiary': { v: '#74736C', d: 'Tertiary text: large or non-essential text only.' },
+  'palette.stone.nav': { v: '#333230', d: 'Navigation icons.' },
+  'palette.stone.ruleQuiet': { v: '#DEDBD0', d: 'Quiet rule.' },
+  'palette.stone.ruleInternal': { v: '#D1CFC4', d: 'Internal divider.' },
+  'palette.stone.borderCard': { v: '#C9C6BC', d: 'Card border.' },
+  'palette.stone.ruleStrong': { v: '#B3B0A6', d: 'Strong rule.' },
+  'palette.stone.fieldEdge': { v: '#8A877F', d: 'Field outline. Meets 3:1 against field ivory (card border does not).' },
+});
+
+add('foundation', 'color', 'Palette / Charcoal & Ivory (dark)', 'color', {
+  'palette.coal.canvas': { v: '#272623', d: 'Charcoal canvas.' },
+  'palette.coal.secondary': { v: '#302F2B', d: 'Sidebars and sunken areas.' },
+  'palette.coal.header': { v: '#34332F', d: 'Headers.' },
+  'palette.coal.panel': { v: '#3B3A36', d: 'Panels and cards.' },
+  'palette.coal.hover': { v: '#3F3E39', d: 'Hover.' },
+  'palette.coal.field': { v: '#41403B', d: 'Fields and popovers.' },
+  'palette.coal.selected': { v: '#41413B', d: 'Selected rows.' },
+  'palette.coal.pressed': { v: '#454440', d: 'Pressed.' },
+  'palette.coal.ink': { v: '#E8E2D8', d: 'Warm ivory text: primary.' },
+  'palette.coal.heritage': { v: '#E8DED0', d: 'Heritage text.' },
+  'palette.coal.inkSecondary': { v: '#B8B2A8', d: 'Secondary text.' },
+  'palette.coal.inkTertiary': { v: '#B1ABA0', d: 'Tertiary text.' },
+  'palette.coal.ruleQuiet': { v: '#45433D', d: 'Quiet rule.' },
+  'palette.coal.ruleInternal': { v: '#4B4942', d: 'Internal divider.' },
+  'palette.coal.borderCard': { v: '#55534C', d: 'Card border.' },
+  'palette.coal.ruleStrong': { v: '#57554D', d: 'Strong rule.' },
+  'palette.coal.fieldEdge': { v: '#918D84', d: 'Field outline. Meets 3:1 against the dark field.' },
+  'palette.coal.control': { v: '#4B4D47', d: 'Primary control fill (dark).' },
+});
+
 add('foundation', 'color', 'Palette / Neutral', 'color', {
   'palette.neutral.0': r('palette.white'),
   'palette.neutral.50': r('palette.ivory'),
@@ -61,7 +101,7 @@ add('foundation', 'color', 'Palette / Brick', 'color', {
   'palette.brick.50': '#F6E9E6',
   'palette.brick.100': '#EBCFCB',
   'palette.brick.200': '#D9A6A0',
-  'palette.brick.300': '#CC8A83',
+  'palette.brick.300': '#DCA397', // Reports' dark brick; 5.3:1 on the dark panel
   'palette.brick.400': '#A9524B',
   'palette.brick.500': r('palette.brick'),
   'palette.brick.600': '#762823',
@@ -92,8 +132,8 @@ const hue = (name: string, label: string, steps: Record<number, string>) =>
     Object.fromEntries(Object.entries(steps).map(([k, v]) => [`palette.${name}.${k}`, v])),
   );
 
-hue('moss', 'Moss', { 50: '#EAF0E7', 100: '#D3E0CE', 300: '#93B48B', 500: '#4F7048', 600: '#3F5C3A', 700: '#31482D', 900: '#1C281A' });
-hue('amber', 'Amber', { 50: '#F8EFD9', 100: '#F0DDB0', 300: '#DDAE55', 500: '#A8741F', 600: '#875C15', 700: '#694710', 900: '#33240A' });
+hue('moss', 'Moss', { 50: '#E8EEE9', 100: '#D0DDD3', 300: '#94BCA3', 500: '#496653', 600: '#3E5747', 700: '#34493C', 900: '#1B2620' }); // 500/300 = Mercantile positive
+hue('amber', 'Amber', { 50: '#F6EEDD', 100: '#ECDCB8', 300: '#D6AF66', 500: '#9A7438', 600: '#7E5E2B', 700: '#664B22', 900: '#33260F' }); // 500/300 = Mercantile attention
 hue('denim', 'Denim', { 50: '#E6EDF2', 100: '#CCD9E3', 300: '#8FADC4', 500: '#3F5E78', 600: '#334D63', 700: '#283D4F', 900: '#16222C' });
 hue('teal', 'Teal', { 300: '#84B5B0', 500: '#3F7470' });
 hue('plum', 'Plum', { 300: '#BC9AAD', 500: '#6E4A5E' });
@@ -219,34 +259,34 @@ add('foundation', 'color', 'Opacity', 'number', {
 /* ───────────────────────── SEMANTIC ───────────────────────── */
 
 add('semantic', 'color', 'Color / Background', 'color', {
-  'color.bg.app': { v: ld(n(50), n(950)), d: 'Window / page background.' },
-  'color.bg.sunken': { v: ld(n(100), n(1000)), d: 'Wells, gutters, and recessed regions.' },
+  'color.bg.app': { v: ld(r('palette.stone.canvas'), r('palette.coal.canvas')), d: 'Window / page background: warm stone / charcoal.' },
+  'color.bg.sunken': { v: ld('#D6D4C9', '#22211F'), d: 'Wells, gutters, and recessed regions (one step below the canvas).' },
 });
 
 add('semantic', 'color', 'Color / Surface', 'color', {
-  'color.surface.default': { v: ld(n(0), n(900)), d: 'Cards, tables, content panes.' },
-  'color.surface.elevated': { v: ld(n(0), n(800)), d: 'Popovers, menus, dialogs.' },
-  'color.surface.sunken': { v: ld(n(100), n(950)), d: 'Inset areas inside a surface.' },
-  'color.surface.sidebar': { v: ld(n(100), n(900)), d: 'Sidebars and source lists.' },
-  'color.surface.hover': { v: ld(n(100), n(800)), d: 'Hover fill on neutral rows and controls.' },
-  'color.surface.pressed': { v: ld(n(200), n(700)), d: 'Pressed fill on neutral rows and controls.' },
-  'color.surface.selected': { v: ld(n(200), n(700)), d: 'Selected rows and navigation items.' },
+  'color.surface.default': { v: ld(r('palette.stone.panel'), r('palette.coal.panel')), d: 'Cards, tables, content panes: warm ivory.' },
+  'color.surface.elevated': { v: ld(r('palette.stone.field'), r('palette.coal.field')), d: 'Popovers, menus, dialogs.' },
+  'color.surface.sunken': { v: ld(r('palette.stone.secondary'), r('palette.coal.secondary')), d: 'Inset areas inside a surface.' },
+  'color.surface.sidebar': { v: ld(r('palette.stone.secondary'), r('palette.coal.secondary')), d: 'Sidebars and source lists.' },
+  'color.surface.hover': { v: ld(r('palette.stone.secondary'), r('palette.coal.hover')), d: 'Hover fill on neutral rows and controls.' },
+  'color.surface.pressed': { v: ld(r('palette.stone.selected'), r('palette.coal.pressed')), d: 'Pressed fill on neutral rows and controls.' },
+  'color.surface.selected': { v: ld(r('palette.stone.selected'), r('palette.coal.selected')), d: 'Selected rows and navigation items.' },
   'color.surface.inverse': { v: ld(n(900), n(100)), d: 'Tooltips and inverse callouts.' },
 });
 
 add('semantic', 'color', 'Color / Text', 'color', {
-  'color.text.primary': { v: ld(n(900), n(50), '#000000', '#FFFFFF'), d: 'Body copy and headings.' },
-  'color.text.secondary': { v: ld(n(650), n(300), n(800), n(100)), d: 'Supporting text, labels. Passes 4.5:1 on every light surface, including sidebars and table headers.' },
-  'color.text.tertiary': { v: ld(n(500), n(400), n(700), n(200)), d: 'Placeholders and de-emphasized metadata. Large text only.' },
+  'color.text.primary': { v: ld(r('palette.stone.ink'), r('palette.coal.ink'), '#000000', '#FFFFFF'), d: 'Body copy and headings: heritage ink / warm ivory.' },
+  'color.text.secondary': { v: ld(r('palette.stone.inkSecondary'), r('palette.coal.inkSecondary'), n(800), n(100)), d: 'Supporting text, labels. Passes 4.5:1 on every light surface, including sidebars and table headers.' },
+  'color.text.tertiary': { v: ld(r('palette.stone.inkTertiary'), r('palette.coal.inkTertiary'), n(700), n(200)), d: 'Placeholders and de-emphasized metadata. Large text only.' },
   'color.text.disabled': { v: ld(n(400), n(600), n(500), n(400)), d: 'Disabled labels.' },
   'color.text.inverse': { v: ld(n(50), n(900)), d: 'Text on inverse surfaces.' },
   'color.text.link': { v: r('color.accent.text'), d: 'Hyperlinks. Always underlined.' },
 });
 
 add('semantic', 'color', 'Color / Border', 'color', {
-  'color.border.subtle': { v: ld(n(200), n(800), n(400), n(500)), d: 'Dividers between related content.' },
-  'color.border.default': { v: ld(n(300), n(700), n(700), n(300)), d: 'Control and container outlines.' },
-  'color.border.strong': { v: ld(n(500), n(500), n(900), n(50)), d: 'Emphasized outlines, table header rules.' },
+  'color.border.subtle': { v: ld(r('palette.stone.ruleInternal'), r('palette.coal.ruleInternal'), n(400), n(500)), d: 'Dividers between related content.' },
+  'color.border.default': { v: ld(r('palette.stone.borderCard'), r('palette.coal.borderCard'), n(700), n(300)), d: 'Card and container outlines.' },
+  'color.border.strong': { v: ld(r('palette.stone.ruleStrong'), r('palette.coal.ruleStrong'), n(900), n(50)), d: 'Emphasized outlines, table header rules.' },
 });
 
 add('semantic', 'color', 'Color / Accent', 'color', {
@@ -288,7 +328,7 @@ add('semantic', 'color', 'Color / Overlay', 'color', {
 add('semantic', 'chart', 'Chart / Categorical', 'color', {
   'color.chart.cat.1': ld(n(700), n(200)),
   'color.chart.cat.2': ld(p('brick', 500), p('brick', 300)),
-  'color.chart.cat.3': ld(p('brass', 500), p('brass', 300)),
+  'color.chart.cat.3': ld(p('brass', 600), p('brass', 300)), // 600 on ivory: brass 500 is under 3:1
   'color.chart.cat.4': ld(p('denim', 500), p('denim', 300)),
   'color.chart.cat.5': ld(p('teal', 500), p('teal', 300)),
   'color.chart.cat.6': ld(p('plum', 500), p('plum', 300)),
@@ -483,10 +523,10 @@ comp('Button', 'dimension', {
 comp('Button', 'fontWeight', { 'button.font.weight': r('text.label.weight') });
 
 comp('Input', 'color', {
-  'input.bg': r('color.surface.default'),
+  'input.bg': { v: ld(r('palette.stone.field'), r('palette.coal.field')), d: 'Field ivory.' },
   'input.fg': r('color.text.primary'),
   'input.placeholder': r('color.text.tertiary'),
-  'input.border': { v: ld(n(500), n(500)), d: 'Field outline. Meets the 3:1 non-text contrast minimum (WCAG 1.4.11).' },
+  'input.border': { v: ld(r('palette.stone.fieldEdge'), r('palette.coal.fieldEdge')), d: 'Field outline. Meets the 3:1 non-text contrast minimum (WCAG 1.4.11).' },
   'input.border.hover': ld(n(700), n(300)),
   'input.border.focus': r('color.accent.default'),
   'input.border.error': r('color.status.danger.solid'),

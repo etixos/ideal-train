@@ -44,6 +44,8 @@ export interface Decision {
   chosen?: string;
   /** Who adopted it (always the owner; recorded for the history). */
   adoptedBy?: string;
+  /** Bumped when the starting list changes an entry, so browsers holding an older copy pick it up. */
+  revision?: number;
   /** Short note: why, caveats, what is still open. */
   note?: string;
   /** Changes recorded from the lab's editor when adopted from "Changes not adopted yet". */

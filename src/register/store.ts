@@ -18,7 +18,14 @@ function load(): RegisterState {
       const p = JSON.parse(raw) as RegisterState;
       // Keep the owner's records; add any seed decisions introduced since.
       const ids = new Set(p.decisions.map((d) => d.id));
-      return { decisions: [...p.decisions, ...SEED_DECISIONS.filter((d) => !ids.has(d.id))], baseline: p.baseline ?? null };
+      // Entries the starting list has revised replace older copies, unless the owner adopted them in the lab since.
+      const seedById = new Map(SEED_DECISIONS.map((d) => [d.id, d]));
+      const decisions = p.decisions.map((d) => {
+        const s = seedById.get(d.id);
+        const ownerAdoptedHere = d.adoptedBy === 'Owner (in the lab)';
+        return s && (s.revision ?? 1) > (d.revision ?? 1) && !ownerAdoptedHere ? structuredClone(s) : d;
+      });
+      return { decisions: [...decisions, ...SEED_DECISIONS.filter((d) => !ids.has(d.id))], baseline: p.baseline ?? null };
     }
   } catch {
     /* fall through to seed */

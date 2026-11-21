@@ -26,7 +26,7 @@ export function ColorSwatch({ id, name }: { id: string; name?: string }) {
       <div className="swatch__meta">
         <div className="row row--between">
           <span className="t-subhead" style={{ textTransform: 'capitalize' }}>
-            {name ?? id.split('.').pop()}
+            {name ?? id.split('.').pop()!.replace(/([A-Z])/g, ' $1')}
           </span>
           {theme.values[id] !== undefined && <span className="token-row__dot" title="Modified" />}
         </div>

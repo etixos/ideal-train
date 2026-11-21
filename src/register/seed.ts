@@ -54,8 +54,12 @@ export const SEED_DECISIONS: Decision[] = [
   {
     id: 'D-001',
     title: 'Lab starting palette',
-    summary: 'The lab was built on the provisional colors from the original brief (Ink #242A28, Ivory #F4F1E9…). Every app actually uses the established Warm Stone & Ivory palette (canvas #E0DED4, panel #F7F5ED, ink #2E241A). The lab should match what your apps use before anything is applied to them.',
-    status: 'needs-decision',
+    summary: 'The lab was built on the provisional colors from the original brief (Ink #242A28, Ivory #F4F1E9…). Every app actually uses the established Warm Stone & Ivory palette (canvas #E0DED4, panel #F7F5ED, ink #2E241A). The lab now uses your apps’ palette as its built-in starting point.',
+    status: 'approved',
+    revision: 2,
+    date: '2026-11-21',
+    adoptedBy: 'Owner (in conversation, 2026-11-21)',
+    chosen: 'established',
     scope: ['Family', 'Lab'],
     source: 'Lab brief vs. Mailbox web/theme.css (reference implementation, Source Index §2d), Blueprint §4.1',
     tokens: Object.keys(ESTABLISHED),
@@ -67,8 +71,12 @@ export const SEED_DECISIONS: Decision[] = [
   {
     id: 'D-002',
     title: 'Dark mode surfaces',
-    summary: 'Two dark palettes are in use. Mailbox, Reports and Count use a deeper charcoal (canvas #272623, panel #3B3A36). Shifts uses the older candidate values (canvas #302F2D, panel #42413E, brighter text #F0EFEA). The Source Index lists this as unresolved (Work Register M-008).',
-    status: 'needs-decision',
+    chosen: 'mailbox',
+    revision: 2,
+    date: '2026-11-21',
+    adoptedBy: 'Owner (in conversation, 2026-11-21)',
+    summary: 'Two dark palettes are in use. Mailbox, Reports and Count use a deeper charcoal (canvas #272623, panel #3B3A36). Shifts uses the older candidate values (canvas #302F2D, panel #42413E, brighter text #F0EFEA). Previously listed as unresolved (Work Register M-008); now decided for the family. Shifts keeps its old values until Mercantile is applied to it.',
+    status: 'approved',
     scope: ['Family', 'Dark mode'],
     source: 'Source Index §3 “Known unresolved example”; Work Register M-008; Mailbox theme.css; Shifts theme.css',
     tokens: Object.keys(SHIFTS_DARK),
@@ -76,7 +84,7 @@ export const SEED_DECISIONS: Decision[] = [
       { id: 'mailbox', label: 'Mailbox / Reports / Count', detail: 'Deeper charcoal, warmer and softer text (#E8E2D8). The most recent visually reviewed work (Mailbox refinement).', apply: darkOnly(MAILBOX_DARK), swatches: ['#272623', '#302F2B', '#3B3A36', '#41403B', '#E8E2D8', '#B8B2A8'], recommended: true },
       { id: 'shifts', label: 'Shifts / historical candidate', detail: 'Lighter charcoal and brighter text. Matches the earlier “Universal Dark Mode” candidate table.', apply: darkOnly(SHIFTS_DARK), swatches: ['#302F2D', '#393836', '#42413E', '#4B4946', '#F0EFEA', '#C8C5BF'] },
     ],
-    note: 'Adopting applies only the dark side of these colors. Compare both in Theme Editor › Side-by-side before choosing.',
+    note: 'Field outlines use #8A877F (light) and #918D84 (dark) so they meet 3:1; your apps’ card border does not.',
   },
   {
     id: 'D-003',
@@ -94,8 +102,13 @@ export const SEED_DECISIONS: Decision[] = [
   {
     id: 'D-004',
     title: 'Reports typography',
+    chosen: 'diamond',
+    revision: 2,
+    date: '2026-11-21',
+    adoptedBy: 'Owner (in conversation, 2026-11-21)',
     summary: 'Reports’ status notes record an open question: the original brief said Georgia Pro + IBM Plex Sans, but Reports uses Avenir Next + Baskerville. Reports is a Diamond Stop app, and Diamond Stop’s fonts are Baskerville + Avenir Next.',
-    status: 'needs-decision',
+    status: 'approved',
+    note: 'Approved “for now”: revisit if Reports should move to Lindemann.',
     scope: ['Reports', 'Diamond Stop'],
     source: 'Reports DEVELOPMENT_STATUS.md:184; CODEX_HANDOFF.md:3; Labelbook Diamond Stop profile',
     options: [
@@ -119,12 +132,12 @@ export const SEED_DECISIONS: Decision[] = [
   { id: 'A-012', title: 'Labelbook controls: Plex Sans everywhere, never Mono', summary: 'IBM Plex Sans for all control text, Georgia for titles only; keys at 5 pt radius; four action weights.', status: 'approved', scope: ['Labelbook'], source: 'ICONS_APPROVED.md “Controls and actions: final system”', date: '2026-11-13' },
 
   /* ───────────── Testing ───────────── */
-  { id: 'T-001', title: 'Light palette values', summary: 'Canvas #E0DED4, panel #F7F5ED, editor #FFFDF9, secondary #EEECE3, heritage text #2E241A, card border #C9C6BC, strong rule #B3B0A6, internal rule #D1CFC4, quiet rule #DEDBD0.', status: 'testing', scope: ['Family'], source: 'Blueprint §4.1 “reference values requiring reconciliation”', note: 'Used identically by all seven apps. A strong candidate to adopt as-is.' },
+  { id: 'T-001', title: 'Light palette values', summary: 'Canvas #E0DED4, panel #F7F5ED, editor #FFFDF9, secondary #EEECE3, heritage text #2E241A, card border #C9C6BC, strong rule #B3B0A6, internal rule #D1CFC4, quiet rule #DEDBD0.', status: 'approved', revision: 2, date: '2026-11-21', scope: ['Family'], source: 'Blueprint §4.1; adopted through D-001', note: 'Secondary text uses #62625D for contrast; the recorded #70706B remains in the apps until Mercantile is applied.' },
   { id: 'T-002', title: 'App accents', summary: 'Mailbox ink green-gray #4F5550 / #A5AA9D; Shifts slate #566274 / #A7B2C1; Lottery aged brass #9A7438.', status: 'testing', scope: ['Mailbox', 'Shifts', 'Lotto'], source: 'Blueprint §4.3 (recorded references)' },
   { id: 'T-003', title: 'Count accent: olive', summary: 'Olive #64664F light; dark #829579 marked provisional. Copper #875D45 is Count-local.', status: 'testing', scope: ['Count'], source: 'Count DEVELOPMENT_STATUS.md' },
   { id: 'T-004', title: 'Reports accent: blue', summary: 'Blue #3A5068 / #A0B7C9, plus money-family inks (sales, fuel, payments…). Not recorded in the shared guidelines.', status: 'testing', scope: ['Reports'], source: 'Reports ReportsApp.swift Style; DailySheet.swift DSColor' },
   { id: 'T-005', title: 'Spacing rhythm', summary: 'Illustrative steps 4 / 8 / 12 / 16 / 24 / 32, with compact, comfortable and touch densities.', status: 'testing', scope: ['Family'], source: 'Controls guideline §4 (illustrative, not approved)' },
-  { id: 'T-006', title: 'Shifts dark values', summary: 'Shifts’ dark palette is explicitly provisional and Shifts-only.', status: 'testing', scope: ['Shifts'], source: 'Shifts AGENTS.md', note: 'Resolved by D-002 when you adopt a dark palette.' },
+  { id: 'T-006', title: 'Shifts dark values', summary: 'Shifts’ dark palette is explicitly provisional and Shifts-only.', status: 'retired', revision: 2, date: '2026-11-21', scope: ['Shifts'], source: 'Shifts AGENTS.md; superseded by D-002', note: 'Shifts still uses these until Mercantile is applied to it.' },
   { id: 'T-007', title: 'Lindemann and Diamond Stop modes in the lab', summary: 'The lab’s two modes share everything except fonts. Monospace is IBM Plex Mono on the web and SF Mono first on Apple platforms.', status: 'testing', scope: ['Lab', 'Lindemann', 'Diamond Stop'], source: 'This lab, 2026-11-21' },
 
   /* ───────────── Ideas ───────────── */

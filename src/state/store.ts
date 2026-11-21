@@ -34,6 +34,15 @@ const HISTORY_LIMIT = 200;
 
 const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x));
 
+/** Explicit theme set by a host page (e.g. claude.ai sets data-theme on the root element). */
+export function hostAppearance(): Appearance | null {
+  if (typeof document === 'undefined') return null;
+  const t = document.documentElement.getAttribute('data-theme');
+  return t === 'dark' || t === 'light' ? t : null;
+}
+const systemAppearance = (): Appearance =>
+  typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
 function load(): LabState {
   const base: LabState = {
     theme: clone(DEFAULT_THEME),
@@ -41,8 +50,7 @@ function load(): LabState {
     future: [],
     saved: [],
     view: {
-      appearance:
-        typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+      appearance: hostAppearance() ?? systemAppearance(),
       contrast: 'standard',
       reducedMotion: false,
       textScale: 1,
@@ -59,7 +67,7 @@ function load(): LabState {
       ...base,
       theme: p.theme ? normalizeTheme(p.theme) : base.theme,
       saved: Array.isArray(p.saved) ? p.saved.map(normalizeTheme) : [],
-      view: { ...base.view, ...(p.view ?? {}), inspect: false },
+      view: { ...base.view, ...(p.view ?? {}), appearance: base.view.appearance, inspect: false },
     };
   } catch {
     return base;
@@ -241,6 +249,17 @@ export const actions = {
     set({ focusToken: id });
   },
 };
+
+/** Follow the host's or system's light/dark setting when it changes. */
+if (typeof window !== 'undefined') {
+  window.matchMedia?.('(prefers-color-scheme: dark)').addEventListener?.('change', () => {
+    if (!hostAppearance()) actions.setView({ appearance: systemAppearance() });
+  });
+  new MutationObserver(() => {
+    const h = hostAppearance();
+    if (h && h !== state.view.appearance) actions.setView({ appearance: h });
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+}
 
 export const canUndo = (s: LabState) => s.past.length > 0;
 export const canRedo = (s: LabState) => s.future.length > 0;

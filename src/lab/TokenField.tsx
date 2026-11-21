@@ -124,8 +124,8 @@ function ValueEditor({ id, type, value, appearance, target, modeLabel, onChange 
   const theme = useTheme();
   const view = useView();
   const resolved = useMemo(
-    () => resolveString(theme, value, { appearance, contrast: 'standard', platform: target?.platform, app: target?.app }),
-    [theme, value, appearance, target?.platform, target?.app],
+    () => resolveString(theme, value, { appearance, contrast: view.contrast, platform: target?.platform, app: target?.app }),
+    [theme, value, appearance, view.contrast, target?.platform, target?.app],
   );
   const label = `${id}${modeLabel ? ` (${modeLabel})` : ''}`;
   let control: React.ReactNode = null;
@@ -215,6 +215,7 @@ export interface TokenFieldProps {
 /** The editing control for one token: picker / slider, raw value, and token linking, per appearance. */
 export function TokenField({ id, target }: TokenFieldProps) {
   const theme = useTheme();
+  const view = useView();
   const def = TOKEN_MAP.get(id);
   if (!def) return <span className="c-danger t-code">Unknown token: {id}</span>;
   const value = rawValue(theme, id, target) ?? def.value;
@@ -238,7 +239,7 @@ export function TokenField({ id, target }: TokenFieldProps) {
   }
   return (
     <div className="tf">
-      <ValueEditor id={id} type={def.type} value={value} appearance="light" target={target} onChange={(nv) => write(id, nv, target)} />
+      <ValueEditor id={id} type={def.type} value={value} appearance={view.appearance} target={target} onChange={(nv) => write(id, nv, target)} />
       {canSplit && (
         <button type="button" className="tf-icon-btn" title="Set separate light and dark values" aria-label="Split into light and dark values" onClick={() => write(id, { light: value, dark: value }, target)}>
           <Icon icon={SunMoon} size="sm" />

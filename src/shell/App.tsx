@@ -3,7 +3,9 @@ import { useEffect, useState, type ComponentType } from 'react';
 import { actions, canRedo, canUndo, useLab, useTheme, useView } from '../state/store';
 import { RootTheme } from '../theme/ThemeScope';
 import { CVD_LABELS } from '../tokens/color';
-import { Badge, IconButton, NavHeading, NavItem, Sidebar, ToastProvider, Toolbar, Tooltip, cx } from '../ui';
+import { Badge, IconButton, NavHeading, NavItem, SegmentedControl, Select, Sidebar, ToastProvider, Toolbar, Tooltip, cx } from '../ui';
+import { MODES, MODE_IDS } from '../tokens/registry';
+import type { ModeId } from '../tokens/types';
 import { CvdFilters } from './CvdFilters';
 import { Inspector } from './Inspector';
 import { NAV } from './nav';
@@ -119,6 +121,20 @@ export function App() {
                 {theme.name}
               </button>
             </div>
+            <div className="m-divider m-divider--vertical lab-topbar__hide-sm" style={{ height: 20 }} />
+            <SegmentedControl<ModeId> size="sm" value={view.mode} onChange={(m) => actions.setView({ mode: m })} options={MODE_IDS.map((m) => ({ value: m, label: MODES[m].label }))} aria-label="Mode" />
+            <Select
+              size="sm"
+              className={cx('lab-topbar__hide-sm', view.editScope === 'mode' && 'lab-scope--mode')}
+              aria-label="Edits apply to"
+              title="Where token edits are saved"
+              value={view.editScope}
+              onChange={(v) => actions.setView({ editScope: v as 'shared' | 'mode' })}
+              options={[
+                { value: 'shared', label: 'Edits apply to both modes' },
+                { value: 'mode', label: `Edits apply to ${MODES[view.mode].label} only` },
+              ]}
+            />
             {modified > 0 && (
               <span className="lab-topbar__hide-sm">
                 <Badge tone="highlight" dot>

@@ -1,9 +1,9 @@
 import { useSyncExternalStore } from 'react';
 import type { CvdType } from '../tokens/color';
-import { DEFAULT_THEME, makeTheme } from '../tokens/presets';
-import { TOKEN_MAP } from '../tokens/registry';
+import { DEFAULT_MODES, DEFAULT_THEME, makeTheme } from '../tokens/presets';
+import { MODE_IDS, TOKEN_MAP } from '../tokens/registry';
 import { valuesEqual } from '../tokens/resolve';
-import type { AppId, Appearance, Contrast, Density, Platform, ThemeDoc, TokenValue } from '../tokens/types';
+import type { AppId, Appearance, Contrast, Density, ModeId, Platform, ThemeDoc, TokenValue } from '../tokens/types';
 
 /**
  * Central lab store: the working theme (with undo/redo), saved configurations,
@@ -17,6 +17,10 @@ export interface ViewState {
   textScale: number;
   cvd: CvdType;
   inspect: boolean;
+  /** Active brand mode: every page, preview and export follows it. */
+  mode: ModeId;
+  /** Where token edits go: the shared system (both modes) or the active mode only. */
+  editScope: 'shared' | 'mode';
 }
 
 export interface LabState {
@@ -56,6 +60,8 @@ function load(): LabState {
       textScale: 1,
       cvd: 'none',
       inspect: false,
+      mode: 'lindemann',
+      editScope: 'shared',
     },
     focusToken: null,
   };
@@ -91,6 +97,9 @@ export function normalizeTheme(x: any): ThemeDoc {
   const values = cleanMap(x?.values);
   // Drop overrides identical to defaults so "modified" indicators stay honest.
   for (const k of Object.keys(values)) if (valuesEqual(values[k], TOKEN_MAP.get(k)!.value)) delete values[k];
+  // Themes saved before modes existed get the default mode overrides.
+  const modes = clone(DEFAULT_MODES);
+  if (x?.modes && typeof x.modes === 'object') for (const m of MODE_IDS) modes[m] = { values: cleanMap(x.modes[m]?.values) };
   const platforms: ThemeDoc['platforms'] = {};
   for (const pf of ['macos', 'ios', 'ipados'] as Platform[]) if (x?.platforms?.[pf]) platforms[pf] = cleanMap(x.platforms[pf]);
   const apps: ThemeDoc['apps'] = {};
@@ -103,6 +112,7 @@ export function normalizeTheme(x: any): ThemeDoc {
     updatedAt: typeof x?.updatedAt === 'number' ? x.updatedAt : Date.now(),
     density: ['compact', 'regular', 'comfortable'].includes(x?.density) ? x.density : 'regular',
     values,
+    modes,
     platforms,
     apps,
   });
@@ -164,6 +174,7 @@ export const actions = {
   setToken(id: string, value: TokenValue | undefined) {
     const def = TOKEN_MAP.get(id);
     if (!def) return;
+    if (state.view.editScope === 'mode') return actions.setModeToken(state.view.mode, id, value);
     const values = { ...state.theme.values };
     if (value === undefined || valuesEqual(value, def.value)) delete values[id];
     else values[id] = value;
@@ -171,6 +182,16 @@ export const actions = {
     commit({ ...state.theme, values }, `token:${id}`);
   },
   setTokens(patch: Record<string, TokenValue | undefined>, key = '') {
+    if (state.view.editScope === 'mode') {
+      const mode = state.view.mode;
+      const mv = { ...state.theme.modes[mode].values };
+      for (const [id, value] of Object.entries(patch)) {
+        if (!TOKEN_MAP.has(id)) continue;
+        if (value === undefined) delete mv[id];
+        else mv[id] = value;
+      }
+      return commit({ ...state.theme, modes: { ...state.theme.modes, [mode]: { values: mv } } }, key);
+    }
     const values = { ...state.theme.values };
     for (const [id, value] of Object.entries(patch)) {
       const def = TOKEN_MAP.get(id);
@@ -179,6 +200,15 @@ export const actions = {
       else values[id] = value;
     }
     commit({ ...state.theme, values }, key);
+  },
+  /** Set (or with `undefined`, remove) a mode-only override. Removing it falls back to the shared value. */
+  setModeToken(mode: ModeId, id: string, value: TokenValue | undefined) {
+    if (!TOKEN_MAP.has(id)) return;
+    const mv = { ...state.theme.modes[mode].values };
+    if (value === undefined) delete mv[id];
+    else mv[id] = value;
+    if (valuesEqual(mv[id], state.theme.modes[mode].values[id])) return;
+    commit({ ...state.theme, modes: { ...state.theme.modes, [mode]: { values: mv } } }, `mode:${mode}:${id}`);
   },
   resetToken(id: string) {
     actions.setToken(id, undefined);
@@ -202,8 +232,8 @@ export const actions = {
     commit({ ...state.theme, name }, 'rename');
   },
   /** Replace the working theme (preset, saved configuration, or import). Undoable. */
-  applyTheme(theme: ThemeDoc) {
-    commit(clone(theme));
+  applyTheme(theme: ThemeDoc, opts: { keepModes?: boolean } = {}) {
+    commit({ ...clone(theme), ...(opts.keepModes ? { modes: clone(state.theme.modes) } : {}) });
   },
   resetAll() {
     commit(clone(DEFAULT_THEME));

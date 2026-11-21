@@ -3,9 +3,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { actions, useTheme, useView } from '../state/store';
 import { useScope } from '../theme/ThemeScope';
 import { formatColor, parseColor, toHex } from '../tokens/color';
-import { APPS, PLATFORM_DEFAULTS, TOKENS, TOKEN_MAP, groupTokens } from '../tokens/registry';
+import { APPS, MODES, PLATFORM_DEFAULTS, TOKENS, TOKEN_MAP, groupTokens } from '../tokens/registry';
 import { allDependentsOf, isPureRef, rawValue, resolveString, valuesEqual } from '../tokens/resolve';
-import type { AppId, Appearance, Layer, Platform, ThemeDoc, TokenType, TokenValue } from '../tokens/types';
+import type { AppId, Appearance, Layer, ModeId, Platform, ThemeDoc, TokenType, TokenValue } from '../tokens/types';
 import { isModal } from '../tokens/types';
 import { Icon, cx } from '../ui';
 import { navigate } from '../shell/router';
@@ -124,8 +124,8 @@ function ValueEditor({ id, type, value, appearance, target, modeLabel, onChange 
   const theme = useTheme();
   const view = useView();
   const resolved = useMemo(
-    () => resolveString(theme, value, { appearance, contrast: view.contrast, platform: target?.platform, app: target?.app }),
-    [theme, value, appearance, view.contrast, target?.platform, target?.app],
+    () => resolveString(theme, value, { appearance, contrast: view.contrast, platform: target?.platform, app: target?.app, mode: view.mode }),
+    [theme, value, appearance, view.contrast, view.mode, target?.platform, target?.app],
   );
   const label = `${id}${modeLabel ? ` (${modeLabel})` : ''}`;
   let control: React.ReactNode = null;
@@ -199,10 +199,11 @@ function write(id: string, value: TokenValue | undefined, target?: EditTarget) {
   else actions.setToken(id, value);
 }
 
-/** True when the token differs from its default in the given edit target. */
-export function isModified(theme: ThemeDoc, id: string, target?: EditTarget): boolean {
+/** True when the token differs from its default in the given edit target (and, for the base theme, the current edit scope). */
+export function isModified(theme: ThemeDoc, id: string, target?: EditTarget, scope?: { mode: ModeId; editScope: 'shared' | 'mode' }): boolean {
   if (target?.app) return theme.apps[target.app]?.[id] !== undefined;
   if (target?.platform && target.platform !== 'web') return theme.platforms[target.platform]?.[id] !== undefined;
+  if (scope?.editScope === 'mode') return theme.modes[scope.mode]?.values[id] !== undefined;
   return theme.values[id] !== undefined;
 }
 
@@ -218,7 +219,7 @@ export function TokenField({ id, target }: TokenFieldProps) {
   const view = useView();
   const def = TOKEN_MAP.get(id);
   if (!def) return <span className="c-danger t-code">Unknown token: {id}</span>;
-  const value = rawValue(theme, id, target) ?? def.value;
+  const value = rawValue(theme, id, { ...target, mode: view.mode }) ?? def.value;
   const canSplit = def.type === 'color' || def.type === 'shadow';
 
   if (isModal(value)) {
@@ -260,9 +261,13 @@ export interface TokenRowProps extends TokenFieldProps {
 /** A labelled token editor row with modified indicator and reset. */
 export function TokenRow({ id, target, stacked, onSelect, selected, hideDescription }: TokenRowProps) {
   const theme = useTheme();
+  const view = useView();
   const def = TOKEN_MAP.get(id);
   if (!def) return null;
-  const modified = isModified(theme, id, target);
+  const modified = isModified(theme, id, target, view);
+  const baseTarget = !target?.app && !(target?.platform && target.platform !== 'web');
+  const modeOverride = baseTarget && theme.modes[view.mode]?.values[id] !== undefined;
+  const modeLabel = MODES[view.mode].label;
   const hasDefaultOverride = target?.app ? APPS[target.app].overrides[id] !== undefined : target?.platform ? PLATFORM_DEFAULTS[target.platform][id] !== undefined : false;
   return (
     <div className={cx('token-row', stacked && 'token-row--stacked', selected && 'is-selected')} data-token-row={id}>
@@ -277,11 +282,16 @@ export function TokenRow({ id, target, stacked, onSelect, selected, hideDescript
             <span className="token-row__id t-code">{id}</span>
           )}
           {hasDefaultOverride && !modified && <span className="token-row__tag">default override</span>}
+          {modeOverride && (
+            <span className="token-row__tag token-row__tag--mode" title={view.editScope === 'shared' ? `${modeLabel} overrides this token, so edits to the shared value won't show in ${modeLabel}. Switch "Edits apply to" to ${modeLabel} only to change it.` : `This value applies to ${modeLabel} only.`}>
+              {modeLabel} only
+            </span>
+          )}
         </div>
         {!hideDescription && def.description && <div className="token-row__desc">{def.description}</div>}
       </div>
       <TokenField id={id} target={target} />
-      <button type="button" className="tf-icon-btn" disabled={!modified} title="Reset to default" aria-label={`Reset ${id}`} onClick={() => write(id, undefined, target)} style={{ visibility: modified ? 'visible' : 'hidden' }}>
+      <button type="button" className="tf-icon-btn" disabled={!modified} title={baseTarget && view.editScope === 'mode' ? `Remove the ${modeLabel} override (use the shared value)` : 'Reset to default'} aria-label={`Reset ${id}`} onClick={() => write(id, undefined, target)} style={{ visibility: modified ? 'visible' : 'hidden' }}>
         <Icon icon={RotateCcw} size="sm" />
       </button>
     </div>

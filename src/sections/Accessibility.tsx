@@ -6,7 +6,7 @@ import { actions, useTheme, useView } from '../state/store';
 import { ThemeScope } from '../theme/ThemeScope';
 import { CVD_LABELS, contrastRatio, simulateCvd, type CvdType } from '../tokens/color';
 import { resolveAll } from '../tokens/resolve';
-import type { Appearance, Contrast } from '../tokens/types';
+import type { Appearance, Contrast, ModeId } from '../tokens/types';
 import { Badge, Button, Card, Checkbox, Icon, IconButton, SegmentedControl, Select, Slider, Switch, TextInput } from '../ui';
 
 interface Pair {
@@ -57,9 +57,9 @@ const MODES: Mode[] = [
 ];
 
 /** Contrast audit across all four appearance modes. Exported for the export/doc generator. */
-export function runAudit(theme: ReturnType<typeof useTheme>) {
+export function runAudit(theme: ReturnType<typeof useTheme>, mode?: ModeId) {
   return MODES.map((m) => {
-    const t = resolveAll(theme, { appearance: m.appearance, contrast: m.contrast });
+    const t = resolveAll(theme, { appearance: m.appearance, contrast: m.contrast, mode });
     return AUDIT_PAIRS.map((p) => {
       const r = contrastRatio(t[p.fg], t[p.bg], t['color.surface.default']) ?? 0;
       return { ...p, mode: m.label, ratio: r, pass: r >= p.min };
@@ -84,7 +84,7 @@ export function AccessibilitySection() {
   const view = useView();
   const [onlyFail, setOnlyFail] = useState(false);
   const [fix, setFix] = useState<string | null>(null);
-  const audit = useMemo(() => runAudit(theme), [theme]);
+  const audit = useMemo(() => runAudit(theme, view.mode), [theme, view.mode]);
   const fails = audit.flat().filter((x) => !x.pass).length;
   const total = audit.flat().length;
   return (
@@ -260,7 +260,7 @@ export function AccessibilitySection() {
 function CvdGrid() {
   const theme = useTheme();
   const view = useView();
-  const t = useMemo(() => resolveAll(theme, { appearance: view.appearance, contrast: view.contrast }), [theme, view.appearance, view.contrast]);
+  const t = useMemo(() => resolveAll(theme, { appearance: view.appearance, contrast: view.contrast, mode: view.mode }), [theme, view.appearance, view.contrast, view.mode]);
   const types: CvdType[] = ['none', 'protanopia', 'deuteranopia', 'tritanopia', 'achromatopsia'];
   const colors = ['color.status.success.solid', 'color.status.warning.solid', 'color.status.danger.solid', 'color.status.info.solid', ...Array.from({ length: 8 }, (_, i) => `color.chart.cat.${i + 1}`)];
   return (

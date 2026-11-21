@@ -1,4 +1,4 @@
-import type { AppId, Category, Layer, Platform, TokenDef, TokenType, TokenValue } from './types';
+import type { AppId, Category, Layer, ModeId, Platform, TokenDef, TokenType, TokenValue } from './types';
 
 /**
  * The built-in Mercantile token registry: default definitions for every token.
@@ -110,8 +110,8 @@ add('foundation', 'typography', 'Font / Family', 'fontFamily', {
     d: 'Display headings and report titles.',
   },
   'font.family.mono': {
-    v: '"SF Mono", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace',
-    d: 'Code, identifiers, token names.',
+    v: '"IBM Plex Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace',
+    d: 'Code, identifiers, token names. IBM Plex Mono on the web; SF Mono first on Apple platforms.',
   },
 });
 
@@ -664,9 +664,12 @@ const touchText: Record<string, TokenValue> = {
 };
 
 /** Platform-specific defaults. `web` is the base and has no overrides. */
+const APPLE_MONO = '"SF Mono", "IBM Plex Mono", ui-monospace, Menlo, monospace';
+
 export const PLATFORM_DEFAULTS: Record<Platform, Record<string, TokenValue>> = {
   web: {},
   macos: {
+    'font.family.mono': APPLE_MONO,
     'text.body.size': '13px',
     'text.label.size': '13px',
     'text.subhead.size': '12px',
@@ -687,6 +690,7 @@ export const PLATFORM_DEFAULTS: Record<Platform, Record<string, TokenValue>> = {
   },
   ios: {
     ...touchText,
+    'font.family.mono': APPLE_MONO,
     'size.control.sm': '34px',
     'size.control.md': '44px',
     'size.control.lg': '50px',
@@ -704,6 +708,7 @@ export const PLATFORM_DEFAULTS: Record<Platform, Record<string, TokenValue>> = {
   },
   ipados: {
     ...touchText,
+    'font.family.mono': APPLE_MONO,
     'size.control.sm': '34px',
     'size.control.md': '44px',
     'size.control.lg': '50px',
@@ -721,6 +726,12 @@ export const PLATFORM_DEFAULTS: Record<Platform, Record<string, TokenValue>> = {
     'control.check.size': '22px',
   },
 };
+
+export const MODES: Record<ModeId, { label: string; description: string }> = {
+  lindemann: { label: 'Lindemann', description: 'Georgia Pro display and headings, IBM Plex Sans interface text.' },
+  diamond: { label: 'Diamond Stop', description: 'Baskerville display and headings, Avenir Next interface text.' },
+};
+export const MODE_IDS = Object.keys(MODES) as ModeId[];
 
 export const PLATFORM_LABELS: Record<Platform, string> = { web: 'Web', macos: 'macOS', ios: 'iOS', ipados: 'iPadOS' };
 

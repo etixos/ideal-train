@@ -44,7 +44,7 @@ function resolvedModes(theme: ThemeDoc, id: string, platform?: Platform, app?: A
 }
 
 /** Structured, portable JSON (W3C Design Tokens–style, with `$value` references in `{token.id}` form). */
-export function toJSON(theme: ThemeDoc): string {
+export function toJSON(theme: ThemeDoc, source: ThemeDoc = theme): string {
   const merged = mergedValues(theme);
   const tree: Record<string, any> = {};
   for (const d of TOKENS) {
@@ -84,7 +84,7 @@ export function toJSON(theme: ThemeDoc): string {
       platforms,
       apps,
       /** Re-importable form: only the overrides relative to the Mercantile defaults. */
-      mercantile: { id: theme.id, name: theme.name, description: theme.description, density: theme.density, values: theme.values, platforms: theme.platforms, apps: theme.apps },
+      mercantile: { id: source.id, name: source.name, description: source.description, density: source.density, values: source.values, modes: source.modes, platforms: source.platforms, apps: source.apps },
     },
     null,
     2,
@@ -206,6 +206,13 @@ function swiftWeight(w: string) {
   return n >= 800 ? '.heavy' : n >= 700 ? '.bold' : n >= 600 ? '.semibold' : n >= 500 ? '.medium' : n >= 400 ? '.regular' : n >= 300 ? '.light' : '.thin';
 }
 
+/** First family in a CSS stack as a Swift Font.custom name, or "" for Apple system faces. */
+function swiftFamily(stack: string) {
+  const first = stack.split(',')[0].trim().replace(/^["']|["']$/g, '');
+  const system = ['-apple-system', 'BlinkMacSystemFont', 'system-ui', 'SF Pro', 'SF Pro Text', 'SF Pro Display', 'New York', 'SF Mono', 'ui-monospace', 'serif', 'sans-serif', 'monospace'];
+  return system.includes(first) ? '' : first;
+}
+
 function swiftDesign(family: string) {
   const f = family.toLowerCase();
   return f.includes('mono') || f.includes('menlo') || f.includes('courier') ? '.monospaced' : f.includes('serif') && !f.includes('sans-serif') ? '.serif' : '.default';
@@ -278,6 +285,10 @@ export function toSwift(theme: ThemeDoc): string {
   push('//');
   push('// Color tokens resolve per appearance (light/dark) and Increase Contrast automatically.');
   push('// Platform-sensitive metrics (type sizes, control heights, radii) resolve per macOS / iPhone / iPad at runtime.');
+  push('//');
+  push('// Fonts: ' + [...new Set(['serif', 'sans', 'mono'].map((k) => swiftFamily(resolveToken(theme, `font.family.${k}`, { appearance: 'light', platform: 'ios' })) || `system ${k}`))].join(', ') + '.');
+  push('// Avenir Next, Baskerville, Georgia and SF Mono ship with macOS and iOS. Georgia Pro and IBM Plex must be');
+  push('// added to the app bundle (check the font licenses); until then SwiftUI falls back to the system font.');
   push('');
   push('import SwiftUI');
   push('#if canImport(UIKit)');
@@ -392,10 +403,14 @@ public extension Color {
   // Typography
   push('// MARK: - Typography');
   push('public struct MercantileTextStyle: Sendable {');
+  push('    /// Font family name for Font.custom; empty means the system font (San Francisco / New York / SF Mono via `design`).');
+  push('    public let family: String');
   push('    public let size: CGFloat; public let weight: Font.Weight; public let design: Font.Design');
   push('    public let lineHeight: CGFloat; public let tracking: CGFloat; public let relativeTo: Font.TextStyle');
   push('    /// Dynamic Type–aware font: scales with the user’s text size relative to `relativeTo`.');
+  push('    /// Custom families must be installed in the app bundle (UIAppFonts / ATSApplicationFontsPath) unless the OS ships them.');
   push('    public var font: Font {');
+  push('        if !family.isEmpty { return Font.custom(family, size: size, relativeTo: relativeTo).weight(weight) }');
   push('        #if os(iOS)');
   push('        let scaled = UIFontMetrics(forTextStyle: relativeTo.uiKit).scaledValue(for: size)');
   push('        return .system(size: scaled, weight: weight, design: design)');
@@ -414,7 +429,7 @@ public extension Color {
   push('public enum MercantileText {');
   for (const s of TEXT_STYLES) {
     const g = (prop: string, p: Platform) => resolveToken(theme, `text.${s}.${prop}`, { appearance: 'light', platform: p });
-    const val = (p: Platform) => `MercantileTextStyle(size: ${num(toPoints(g('size', p)) ?? 14)}, weight: ${swiftWeight(g('weight', p))}, design: ${swiftDesign(g('family', p))}, lineHeight: ${num(parseFloat(g('leading', p)) || 1.3)}, tracking: ${num(parseFloat(g('tracking', p)) || 0)}, relativeTo: ${DYNAMIC_TEXT_STYLE[s]})`;
+    const val = (p: Platform) => `MercantileTextStyle(family: ${JSON.stringify(swiftFamily(g('family', p)))}, size: ${num(toPoints(g('size', p)) ?? 14)}, weight: ${swiftWeight(g('weight', p))}, design: ${swiftDesign(g('family', p))}, lineHeight: ${num(parseFloat(g('leading', p)) || 1.3)}, tracking: ${num(parseFloat(g('tracking', p)) || 0)}, relativeTo: ${DYNAMIC_TEXT_STYLE[s]})`;
     const [m, i, pd] = [val('macos'), val('ios'), val('ipados')];
     push(`    public static var ${s}: MercantileTextStyle { mercantilePlatform(mac: ${m}, phone: ${i}, pad: ${pd}) }`);
   }

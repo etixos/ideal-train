@@ -1,7 +1,10 @@
 import { Check, Copy, Download, FileJson, Trash2, Upload } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import { Page, Section } from '../lab/Page';
-import { actions, useLab, useTheme } from '../state/store';
+import { actions, useLab, useTheme, useView } from '../state/store';
+import { flattenMode } from '../tokens/resolve';
+import { MODES, MODE_IDS } from '../tokens/registry';
+import type { ModeId } from '../tokens/types';
 import { download, slug, toCSS, toJSON, toMarkdown, toSwift } from '../tokens/export';
 import { runAudit } from './Accessibility';
 import { Alert, Badge, Button, Card, IconButton, SegmentedControl, TextArea, TextInput, useToast } from '../ui';
@@ -9,13 +12,18 @@ import { Alert, Badge, Button, Card, IconButton, SegmentedControl, TextArea, Tex
 type Format = 'json' | 'css' | 'swift' | 'md';
 const FORMATS: { value: Format; label: string; file: (n: string) => string; mime: string; desc: string }[] = [
   { value: 'json', label: 'JSON tokens', file: (n) => `${n}.tokens.json`, mime: 'application/json', desc: 'Every token with its layer, references, light/dark/high-contrast values, platform and app overrides. Re-importable.' },
-  { value: 'css', label: 'CSS variables', file: () => 'mercantile-tokens.css', mime: 'text/css', desc: 'Custom properties for web apps. References stay as var(); dark, high-contrast, reduced-motion, platform and app scopes included.' },
-  { value: 'swift', label: 'SwiftUI', file: () => 'MercantileTokens.swift', mime: 'text/x-swift', desc: 'Swift types with dynamic light/dark/high-contrast colors, platform-aware metrics, Dynamic Type text styles, and a reference button style.' },
+  { value: 'css', label: 'CSS variables', file: (n) => `${n}-tokens.css`, mime: 'text/css', desc: 'Custom properties for web apps. References stay as var(); dark, high-contrast, reduced-motion, platform and app scopes included.' },
+  { value: 'swift', label: 'SwiftUI', file: (n) => `MercantileTokens-${n.split('-').slice(-2).map((w) => w[0].toUpperCase() + w.slice(1)).join('')}.swift`, mime: 'text/x-swift', desc: 'Swift types with dynamic light/dark/high-contrast colors, platform-aware metrics, Dynamic Type text styles, and a reference button style.' },
   { value: 'md', label: 'Documentation', file: (n) => `${n}-design-system.md`, mime: 'text/markdown', desc: 'Human-readable design documentation with build rules. Hand this to Claude when starting a new app.' },
 ];
 
 export function ExportSection() {
-  const theme = useTheme();
+  const fullTheme = useTheme();
+  const view = useView();
+  const [modeSel, setModeSel] = useState<ModeId | null>(null);
+  const mode = modeSel ?? view.mode;
+  /** Exports describe one mode: shared values with that mode's overrides applied. */
+  const theme = useMemo(() => flattenMode(fullTheme, mode), [fullTheme, mode]);
   const saved = useLab((s) => s.saved);
   const toast = useToast();
   const [fmt, setFmt] = useState<Format>('md');
@@ -25,13 +33,13 @@ export function ExportSection() {
   const [snapName, setSnapName] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const output = useMemo(() => {
-    if (fmt === 'json') return toJSON(theme);
+    if (fmt === 'json') return toJSON(theme, fullTheme);
     if (fmt === 'css') return toCSS(theme);
     if (fmt === 'swift') return toSwift(theme);
     return toMarkdown(theme, runAudit(theme));
-  }, [fmt, theme]);
+  }, [fmt, theme, fullTheme]);
   const f = FORMATS.find((x) => x.value === fmt)!;
-  const name = slug(theme.name);
+  const name = slug(`${fullTheme.name} ${MODES[mode].label}`);
 
   const doImport = (text: string) => {
     try {
@@ -83,7 +91,7 @@ export function ExportSection() {
             <Button
               icon={Download}
               onClick={() => {
-                FORMATS.forEach((x, i) => setTimeout(() => download(x.file(name), x.value === 'json' ? toJSON(theme) : x.value === 'css' ? toCSS(theme) : x.value === 'swift' ? toSwift(theme) : toMarkdown(theme, runAudit(theme)), x.mime), i * 250));
+                FORMATS.forEach((x, i) => setTimeout(() => download(x.file(name), x.value === 'json' ? toJSON(theme, fullTheme) : x.value === 'css' ? toCSS(theme) : x.value === 'swift' ? toSwift(theme) : toMarkdown(theme, runAudit(theme)), x.mime), i * 250));
               }}
             >
               Download all four
@@ -91,7 +99,10 @@ export function ExportSection() {
           </>
         }
       >
-        <SegmentedControl value={fmt} onChange={setFmt} options={FORMATS.map((x) => ({ value: x.value, label: x.label }))} aria-label="Format" />
+        <div className="row row--wrap">
+          <SegmentedControl<ModeId> value={mode} onChange={setModeSel} options={MODE_IDS.map((m) => ({ value: m, label: MODES[m].label }))} aria-label="Mode to export" />
+          <SegmentedControl value={fmt} onChange={setFmt} options={FORMATS.map((x) => ({ value: x.value, label: x.label }))} aria-label="Format" />
+        </div>
         <div className="row t-footnote c-secondary">
           <Badge>{output.split('\n').length.toLocaleString()} lines</Badge>
           <span>{(output.length / 1024).toFixed(1)} KB · updates live with the working theme “{theme.name}”</span>
@@ -104,11 +115,11 @@ export function ExportSection() {
       <div className="grid grid--2">
         <Section title="Saved configurations" description="Named snapshots of the working theme, stored in this browser. Download one to keep it or share it.">
           <div className="row">
-            <TextInput aria-label="Configuration name" placeholder={theme.name} value={snapName} onChange={setSnapName} style={{ flex: 1 }} />
+            <TextInput aria-label="Configuration name" placeholder={fullTheme.name} value={snapName} onChange={setSnapName} style={{ flex: 1 }} />
             <Button
               variant="primary"
               onClick={() => {
-                const s = actions.saveSnapshot(snapName.trim() || theme.name);
+                const s = actions.saveSnapshot(snapName.trim() || fullTheme.name);
                 setSnapName('');
                 toast({ tone: 'success', title: 'Saved', text: s.name });
               }}
@@ -146,7 +157,7 @@ export function ExportSection() {
               </tbody>
             </table>
           </Card>
-          <Button icon={FileJson} onClick={() => download(`${name}.mercantile.json`, JSON.stringify(theme, null, 2), 'application/json')}>
+          <Button icon={FileJson} onClick={() => download(`${name}.mercantile.json`, JSON.stringify(fullTheme, null, 2), 'application/json')}>
             Download working configuration
           </Button>
         </Section>

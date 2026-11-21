@@ -1,7 +1,7 @@
 import { createContext, useContext, useLayoutEffect, useMemo, type CSSProperties, type ReactNode } from 'react';
 import { useTheme, useView } from '../state/store';
 import { cssVars, resolveAll } from '../tokens/resolve';
-import type { AppId, Appearance, Contrast, Density, Platform, ResolveOptions, ThemeDoc } from '../tokens/types';
+import type { AppId, Appearance, Contrast, Density, ModeId, Platform, ResolveOptions, ThemeDoc } from '../tokens/types';
 
 /**
  * Scope context: the theme and resolve options in effect for a subtree.
@@ -26,6 +26,7 @@ export function useScope(): Scope {
         opts: {
           appearance: view.appearance,
           contrast: view.contrast,
+          mode: view.mode,
           textScale: view.textScale,
           reducedMotion: view.reducedMotion,
         },
@@ -47,6 +48,8 @@ export interface ThemeScopeProps {
   contrast?: Contrast;
   platform?: Platform;
   app?: AppId;
+  /** Brand mode for this subtree. Pass `null` to render the theme without a mode (already-flattened themes). */
+  mode?: ModeId | null;
   density?: Density;
   textScale?: number;
   reducedMotion?: boolean;
@@ -70,6 +73,7 @@ export function ThemeScope(props: ThemeScopeProps) {
       contrast: props.contrast ?? parent.opts.contrast,
       platform: props.platform ?? parent.opts.platform,
       app: props.app ?? parent.opts.app,
+      mode: props.mode === null ? undefined : (props.mode ?? parent.opts.mode),
       density: props.density ?? parent.opts.density,
       textScale: props.textScale ?? parent.opts.textScale,
       reducedMotion: props.reducedMotion ?? parent.opts.reducedMotion,
@@ -79,6 +83,7 @@ export function ThemeScope(props: ThemeScopeProps) {
       props.contrast,
       props.platform,
       props.app,
+      props.mode,
       props.density,
       props.textScale,
       props.reducedMotion,
@@ -95,6 +100,7 @@ export function ThemeScope(props: ThemeScopeProps) {
         data-contrast={opts.contrast ?? 'standard'}
         data-platform={opts.platform ?? 'web'}
         data-app={opts.app}
+        data-mode={opts.mode}
         data-reduced-motion={opts.reducedMotion ? 'true' : undefined}
         style={{ ...(vars as CSSProperties), colorScheme: opts.appearance, ...props.style }}
       >
@@ -112,13 +118,14 @@ export function RootTheme() {
     const vars = cssVars(theme, {
       appearance: view.appearance,
       contrast: view.contrast,
+      mode: view.mode,
       textScale: view.textScale,
       reducedMotion: view.reducedMotion,
     });
     return `:root{${Object.entries(vars)
       .map(([k, val]) => `${k}:${val}`)
       .join(';')};color-scheme:${view.appearance}}`;
-  }, [theme, view.appearance, view.contrast, view.textScale, view.reducedMotion]);
+  }, [theme, view.appearance, view.contrast, view.mode, view.textScale, view.reducedMotion]);
 
   useLayoutEffect(() => {
     let el = document.getElementById('mercantile-root-theme') as HTMLStyleElement | null;
@@ -131,9 +138,10 @@ export function RootTheme() {
     const root = document.documentElement;
     root.dataset.appearance = view.appearance;
     root.dataset.contrast = view.contrast;
+    root.dataset.mode = view.mode;
     if (view.reducedMotion) root.dataset.reducedMotion = 'true';
     else delete root.dataset.reducedMotion;
-  }, [css, view.appearance, view.contrast, view.reducedMotion]);
+  }, [css, view.appearance, view.contrast, view.mode, view.reducedMotion]);
 
   return null;
 }

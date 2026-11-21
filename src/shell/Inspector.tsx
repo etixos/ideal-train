@@ -246,7 +246,7 @@ function openInEditor(id: string) {
 function InspectToken({ id }: { id: string }) {
   const theme = useTheme();
   const view = useView();
-  const chain = refChain(theme, id, { appearance: view.appearance, contrast: view.contrast });
+  const chain = refChain(theme, id, { appearance: view.appearance, contrast: view.contrast, mode: view.mode });
   const def = TOKEN_MAP.get(id)!;
   return (
     <div className="m-card" style={{ padding: 'var(--space-component-default)' }}>

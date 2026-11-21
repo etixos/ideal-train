@@ -2,49 +2,97 @@ import { useState } from 'react';
 import { EditorTabs } from '../lab/EditorTabs';
 import { Demo, Page, Section, Workbench } from '../lab/Page';
 import { actions, useTheme, useView } from '../state/store';
+import { FONT } from '../tokens/presets';
+import { MODES } from '../tokens/registry';
+import { useFontStack } from '../lab/fonts';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import { ThemeScope, useResolvedTokens } from '../theme/ThemeScope';
 import { TEXT_STYLES } from '../tokens/registry';
 import { rawValue } from '../tokens/resolve';
-import type { Platform } from '../tokens/types';
-import { Card, Select, SegmentedControl, Slider } from '../ui';
+import type { ModeId, Platform } from '../tokens/types';
+import { Badge, Card, Icon, Select, SegmentedControl, Slider } from '../ui';
 
 export const FONT_STACKS: Record<string, { label: string; value: string }[]> = {
   sans: [
+    { label: 'IBM Plex Sans (Lindemann)', value: FONT.ibmPlexSans },
+    { label: 'Avenir Next (Diamond Stop)', value: FONT.avenirNext },
     { label: 'System (San Francisco)', value: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' },
     { label: 'Helvetica Neue', value: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
-    { label: 'Avenir', value: 'Avenir, "Avenir Next", "Segoe UI", sans-serif' },
     { label: 'Gill Sans', value: '"Gill Sans", "Gill Sans MT", Calibri, sans-serif' },
-    { label: 'Verdana', value: 'Verdana, Geneva, sans-serif' },
   ],
   serif: [
+    { label: 'Georgia Pro (Lindemann)', value: FONT.georgiaPro },
+    { label: 'Baskerville (Diamond Stop)', value: FONT.baskerville },
     { label: 'New York / Iowan', value: '"New York", "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif' },
-    { label: 'Baskerville', value: 'Baskerville, "Baskerville Old Face", "Libre Baskerville", Georgia, serif' },
     { label: 'Georgia', value: 'Georgia, "Times New Roman", serif' },
-    { label: 'Didot', value: 'Didot, "Bodoni MT", "Bodoni 72", serif' },
     { label: 'Charter', value: 'Charter, "Bitstream Charter", "Sitka Text", Cambria, serif' },
   ],
   mono: [
-    { label: 'SF Mono / system', value: '"SF Mono", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace' },
+    { label: 'IBM Plex Mono, then SF Mono', value: FONT.ibmPlexMono },
+    { label: 'SF Mono, then IBM Plex Mono', value: '"SF Mono", "IBM Plex Mono", ui-monospace, Menlo, monospace' },
     { label: 'Menlo', value: 'Menlo, Monaco, Consolas, monospace' },
-    { label: 'Courier', value: '"Courier New", Courier, monospace' },
   ],
 };
 
+function FontStatus({ stack }: { stack: string }) {
+  const r = useFontStack(stack);
+  if (!r) return <span className="font-status c-tertiary">Checking fonts…</span>;
+  const primary = r.families[0];
+  return (
+    <div className="stack" style={{ gap: 2 }}>
+      {r.families
+        .filter((f) => !['serif', 'sans-serif', 'monospace', 'ui-monospace', '-apple-system', 'BlinkMacSystemFont'].includes(f.name))
+        .slice(0, 3)
+        .map((f) => (
+          <span key={f.name} className={`font-status ${f.available ? 'c-success' : 'c-tertiary'}`}>
+            <Icon icon={f.available ? CheckCircle2 : XCircle} size="sm" />
+            {f.name}: {f.available ? 'available' : 'not installed'}
+          </span>
+        ))}
+      {!primary.available && r.using && <span className="t-caption c-warning">Showing {r.using} in its place on this device.</span>}
+    </div>
+  );
+}
+
 function FamilyPicker({ kind }: { kind: 'sans' | 'serif' | 'mono' }) {
   const theme = useTheme();
+  const view = useView();
   const id = `font.family.${kind}`;
-  const cur = rawValue(theme, id) as string;
+  const cur = rawValue(theme, id, { mode: view.mode }) as string;
+  const modeOwned = theme.modes[view.mode]?.values[id] !== undefined;
   const opts = FONT_STACKS[kind];
   const match = opts.find((o) => o.value === cur);
   return (
     <Card padded>
       <div className="stack">
-        <div className="t-overline c-secondary">{kind === 'sans' ? 'Interface' : kind === 'serif' ? 'Display' : 'Monospace'}</div>
+        <div className="row row--between">
+          <div className="t-overline c-secondary">{kind === 'sans' ? 'Interface' : kind === 'serif' ? 'Display & headings' : 'Monospace'}</div>
+          <Badge tone={modeOwned ? 'highlight' : 'neutral'}>{modeOwned ? `${MODES[view.mode].label} only` : 'Shared'}</Badge>
+        </div>
         <div style={{ fontFamily: `var(--font-family-${kind})`, fontSize: 30, lineHeight: 1.1 }}>Hollis &amp; Grant 1872</div>
         <Select aria-label={`${kind} family`} value={match?.value ?? ''} onChange={(v) => actions.setToken(id, v)} options={[...(match ? [] : [{ value: '', label: 'Custom stack' }]), ...opts.map((o) => ({ value: o.value, label: o.label }))]} />
+        <FontStatus stack={cur} />
         <span className="t-code c-tertiary">{id}</span>
       </div>
     </Card>
+  );
+}
+
+function ModeSpecimen({ mode }: { mode: ModeId }) {
+  return (
+    <ThemeScope mode={mode} surface style={{ padding: 'var(--space-inset-lg)', borderRadius: 'var(--radius-container)', border: '1px solid var(--color-border-subtle)' }}>
+      <div className="stack">
+        <div className="t-overline c-highlight">{MODES[mode].label}</div>
+        <div className="t-title1">Quarterly Review</div>
+        <div className="t-title3">Holiday sell-through at 67.2%</div>
+        <p className="t-body c-secondary">Inventory received after 4 p.m. is counted on the next business day and appears in the morning report.</p>
+        <div className="row">
+          <span className="m-btn m-btn--primary">Receive stock</span>
+          <span className="t-code c-secondary">PO-24811 · $8,420.00</span>
+        </div>
+        <span className="t-caption c-tertiary">{MODES[mode].description}</span>
+      </div>
+    </ThemeScope>
   );
 }
 
@@ -91,7 +139,14 @@ export function Typography() {
           />
         }
       >
-        <Section title="Font families">
+        <Section title="Modes side by side" description="Lindemann and Diamond Stop share everything except what each mode overrides. Switch the active mode in the top bar.">
+          <div className="grid grid--2">
+            <ModeSpecimen mode="lindemann" />
+            <ModeSpecimen mode="diamond" />
+          </div>
+        </Section>
+
+        <Section title="Font families" description="Families for the active mode. A badge shows whether each is shared or set for this mode only; use “Edits apply to” in the top bar to choose which you change.">
           <div className="grid grid--3">
             <FamilyPicker kind="serif" />
             <FamilyPicker kind="sans" />

@@ -1,4 +1,4 @@
-import { actions, useTheme } from '../state/store';
+import { actions, useTheme, useView } from '../state/store';
 import { useResolvedTokens } from '../theme/ThemeScope';
 import { contrastRatio, parseColor, toHex, wcagLevel } from '../tokens/color';
 import { TOKEN_MAP } from '../tokens/registry';
@@ -11,8 +11,9 @@ import { editToken } from './TokenField';
 export function ColorSwatch({ id, name }: { id: string; name?: string }) {
   const t = useResolvedTokens();
   const theme = useTheme();
+  const view = useView();
   const value = t[id];
-  const raw = rawValue(theme, id);
+  const raw = rawValue(theme, id, { mode: view.mode });
   const editable = raw !== undefined && !isModal(raw) && !isPureRef(raw);
   const onInk = contrastRatio(value, t['palette.ink']) ?? 0;
   const onIvory = contrastRatio(value, t['palette.ivory']) ?? 0;

@@ -7,9 +7,9 @@ import { TokenField, TokenTable } from '../lab/TokenField';
 import { actions, canRedo, canUndo, useLab, useTheme, useView } from '../state/store';
 import { ThemeScope, useResolvedTokens } from '../theme/ThemeScope';
 import { DEFAULT_THEME, PRESETS } from '../tokens/presets';
-import { TOKENS, TOKEN_MAP } from '../tokens/registry';
-import { allDependentsOf, dependentsOf, mergedValues, refChain, valuesEqual } from '../tokens/resolve';
-import type { Category, Density, Layer, ThemeDoc } from '../tokens/types';
+import { MODES, MODE_IDS, TOKENS, TOKEN_MAP } from '../tokens/registry';
+import { allDependentsOf, dependentsOf, flattenMode, mergedValues, refChain, valuesEqual } from '../tokens/resolve';
+import type { Category, Density, Layer, ModeId, ThemeDoc } from '../tokens/types';
 import { Badge, Button, Card, Checkbox, EmptyState, SearchField, SegmentedControl, Select, Tabs, TextInput, useToast } from '../ui';
 
 const CATEGORIES: { value: Category | 'all'; label: string }[] = [
@@ -44,7 +44,7 @@ function TokenDetail({ id, onSelect }: { id: string; onSelect: (id: string) => v
   const view = useView();
   const t = useResolvedTokens();
   const def = TOKEN_MAP.get(id)!;
-  const chain = refChain(theme, id, { appearance: view.appearance, contrast: view.contrast });
+  const chain = refChain(theme, id, { appearance: view.appearance, contrast: view.contrast, mode: view.mode });
   const direct = dependentsOf(theme, id);
   const all = allDependentsOf(theme, id);
   const comps = usedByComponents(theme, id);
@@ -113,6 +113,7 @@ function TokenDetail({ id, onSelect }: { id: string; onSelect: (id: string) => v
 
 function Browser({ selected, onSelect }: { selected: string | null; onSelect: (id: string) => void }) {
   const theme = useTheme();
+  const view = useView();
   const focus = useLab((s) => s.focusToken);
   const [q, setQ] = useState('');
   const [cat, setCat] = useState<Category | 'all'>('color');
@@ -144,10 +145,10 @@ function Browser({ selected, onSelect }: { selected: string | null; onSelect: (i
       (d) =>
         (cat === 'all' || d.category === cat) &&
         (layer === 'all' || d.layer === layer) &&
-        (!modifiedOnly || theme.values[d.id] !== undefined) &&
+        (!modifiedOnly || theme.values[d.id] !== undefined || theme.modes[view.mode]?.values[d.id] !== undefined) &&
         (!lq || d.id.toLowerCase().includes(lq) || d.description?.toLowerCase().includes(lq) || d.group.toLowerCase().includes(lq)),
     ).map((d) => d.id);
-  }, [q, cat, layer, modifiedOnly, theme.values]);
+  }, [q, cat, layer, modifiedOnly, theme.values, theme.modes, view.mode]);
   const shown = ids.slice(0, 300);
   return (
     <div className="stack stack--md" style={{ minWidth: 0 }}>
@@ -173,12 +174,19 @@ function diff(a: ThemeDoc, b: ThemeDoc) {
 
 function Compare() {
   const theme = useTheme();
+  const view = useView();
   const saved = useLab((s) => s.saved);
-  const options = [{ value: 'defaults', label: 'Mercantile defaults' }, ...PRESETS.slice(1).map((p) => ({ value: `preset:${p.id}`, label: `Preset: ${p.name}` })), ...saved.map((s) => ({ value: `saved:${s.id}`, label: `Saved: ${s.name}` }))];
-  const [other, setOther] = useState(options[1]?.value ?? 'defaults');
+  const otherModes = MODE_IDS.filter((m) => m !== view.mode);
+  const options = [...otherModes.map((m) => ({ value: `mode:${m}`, label: `${MODES[m].label} mode` })), { value: 'defaults', label: 'Mercantile defaults' }, ...PRESETS.slice(1).map((p) => ({ value: `preset:${p.id}`, label: `Preset: ${p.name}` })), ...saved.map((s) => ({ value: `saved:${s.id}`, label: `Saved: ${s.name}` }))];
+  const [otherSel, setOther] = useState(options[0].value);
+  const other = options.some((o) => o.value === otherSel) ? otherSel : options[0].value;
   const [appearance, setAppearance] = useState<'light' | 'dark'>('light');
-  const b = other === 'defaults' ? DEFAULT_THEME : other.startsWith('preset:') ? PRESETS.find((p) => `preset:${p.id}` === other)! : saved.find((s) => `saved:${s.id}` === other) ?? DEFAULT_THEME;
-  const d = useMemo(() => diff(theme, b), [theme, b]);
+  const isMode = other.startsWith('mode:');
+  const source = other === 'defaults' ? DEFAULT_THEME : other.startsWith('preset:') ? PRESETS.find((p) => `preset:${p.id}` === other)! : saved.find((s) => `saved:${s.id}` === other) ?? DEFAULT_THEME;
+  const left = useMemo(() => flattenMode(theme, view.mode), [theme, view.mode]);
+  // Modes compare within the working theme; presets and saved themes are shown in the active mode.
+  const b = useMemo(() => (isMode ? flattenMode(theme, other.slice(5) as ModeId) : flattenMode(source, view.mode)), [isMode, theme, other, source, view.mode]);
+  const d = useMemo(() => diff(left, b), [left, b]);
   const fmt = (v: unknown) => (typeof v === 'string' ? v : JSON.stringify(v));
   return (
     <div className="stack stack--md">
@@ -187,18 +195,20 @@ function Compare() {
         <Select aria-label="Comparison theme" value={other} onChange={setOther} options={options} />
         <SegmentedControl size="sm" value={appearance} onChange={setAppearance} options={[{ value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} aria-label="Appearance" />
         <div className="spacer" />
-        <Button size="sm" onClick={() => actions.applyTheme({ ...b, name: b.name })}>
-          Use {b.name}
-        </Button>
+        {!isMode && (
+          <Button size="sm" onClick={() => actions.applyTheme(source, { keepModes: true })}>
+            Use {source.name}
+          </Button>
+        )}
       </div>
       <div className="grid grid--2">
         {[
-          [theme, `${theme.name} (working)`],
+          [left, `${left.name} (working)`],
           [b, b.name],
         ].map(([th, label]) => (
           <div key={label as string} className="stack stack--xs">
             <span className="t-headline">{label as string}</span>
-            <ThemeScope theme={th as ThemeDoc} appearance={appearance} density={(th as ThemeDoc).density} surface={false}>
+            <ThemeScope theme={th as ThemeDoc} mode={null} appearance={appearance} density={(th as ThemeDoc).density} surface={false}>
               <PreviewBoard />
             </ThemeScope>
           </div>
@@ -210,7 +220,7 @@ function Compare() {
             <thead>
               <tr>
                 <th>Token</th>
-                <th>Working</th>
+                <th>{MODES[view.mode].label} (working)</th>
                 <th>{b.name}</th>
               </tr>
             </thead>
@@ -245,7 +255,7 @@ function Presets() {
     <div className="stack stack--lg">
       <div className="grid grid--2">
         {PRESETS.map((p) => (
-          <Card key={p.id} title={p.name} subtitle={p.description} footer={<><Badge>{Object.keys(p.values).length} overrides · {p.density}</Badge><div className="spacer" /><Button size="sm" variant="primary" onClick={() => { actions.applyTheme(p); toast({ title: `Applied ${p.name}`, text: 'Undo restores your previous theme.' }); }}>Apply</Button></>}>
+          <Card key={p.id} title={p.name} subtitle={p.description} footer={<><Badge>{Object.keys(p.values).length} overrides · {p.density}</Badge><div className="spacer" /><Button size="sm" variant="primary" onClick={() => { actions.applyTheme(p, { keepModes: true }); toast({ title: `Applied ${p.name}`, text: 'Undo restores your previous theme.' }); }}>Apply</Button></>}>
             <ThemeScope theme={p} density={p.density} surface={false}>
               <div style={{ zoom: 0.7 } as React.CSSProperties}>
                 <PreviewBoard compact />
@@ -279,6 +289,7 @@ function Presets() {
 
 export function ThemeEditor() {
   const theme = useTheme();
+  const view = useView();
   const undoable = useLab(canUndo);
   const redoable = useLab(canRedo);
   const pastLen = useLab((s) => s.past.length);
@@ -322,14 +333,18 @@ export function ThemeEditor() {
           value=""
           onChange={(id) => {
             const p = PRESETS.find((x) => x.id === id);
-            if (p) actions.applyTheme(p);
+            if (p) actions.applyTheme(p, { keepModes: true });
           }}
           options={[{ value: '', label: 'Start from preset…' }, ...PRESETS.map((p) => ({ value: p.id, label: p.name }))]}
         />
         <SegmentedControl<Density> size="sm" value={theme.density} onChange={actions.setDensity} options={[{ value: 'compact', label: 'Compact' }, { value: 'regular', label: 'Regular' }, { value: 'comfortable', label: 'Comfortable' }]} aria-label="Density" />
         <Badge tone={modified ? 'highlight' : 'neutral'} dot>
-          {modified} modified
+          {modified} shared changes
         </Badge>
+        <Badge tone="highlight">
+          {Object.keys(theme.modes[view.mode]?.values ?? {}).length} {MODES[view.mode].label} overrides
+        </Badge>
+        <span className="t-footnote c-secondary">Edits apply to {view.editScope === 'mode' ? `${MODES[view.mode].label} only` : 'both modes'} (change in the top bar)</span>
         <span className="t-footnote c-tertiary">{pastLen} undo steps</span>
         <div className="spacer" />
         <Button

@@ -220,3 +220,8 @@ button.token-row__id:hover { text-decoration: underline; }
 .shift--mid { border: 0; border-left: 3px solid var(--color-chart-cat-3); background: var(--color-highlight-subtle); }
 .shift--close { border: 0; border-left: 3px solid var(--color-chart-cat-1); background: var(--color-accent-subtle); }
 .shift--pto { border: 0; background: repeating-linear-gradient(45deg, var(--color-surface-sunken) 0 6px, transparent 6px 12px); color: var(--color-text-secondary); font-weight: var(--font-weight-semibold); }
+
+/* Modes */
+.lab-scope--mode { border-color: var(--color-highlight-default); background: var(--color-highlight-subtle); }
+.token-row__tag--mode { color: var(--color-highlight-text); border-color: var(--color-highlight-default); background: var(--color-highlight-subtle); }
+.font-status { display: inline-flex; align-items: center; gap: 4px; font-size: var(--text-caption-size); }

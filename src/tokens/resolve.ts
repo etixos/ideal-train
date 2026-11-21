@@ -1,5 +1,5 @@
-import { APPS, PLATFORM_DEFAULTS, TOKENS, TOKEN_MAP } from './registry';
-import type { Density, ModalValue, ResolveOptions, ThemeDoc, TokenValue } from './types';
+import { APPS, MODES, PLATFORM_DEFAULTS, TOKENS, TOKEN_MAP } from './registry';
+import type { Density, ModalValue, ModeId, ResolveOptions, ThemeDoc, TokenValue } from './types';
 import { isModal } from './types';
 
 export const DENSITY_FACTOR: Record<Density, number> = { compact: 0.86, regular: 1, comfortable: 1.14 };
@@ -26,9 +26,9 @@ export const isPureRef = (s: string) => /^\{[^}]+\}$/.test(s.trim());
 
 /**
  * The stored (unresolved) value for a token given the theme and scope.
- * Precedence: app override → platform override → theme value → registry default.
+ * Precedence: app override → platform override → mode override → shared theme value → registry default.
  */
-export function rawValue(theme: ThemeDoc, id: string, opts?: Pick<ResolveOptions, 'platform' | 'app'>): TokenValue | undefined {
+export function rawValue(theme: ThemeDoc, id: string, opts?: Pick<ResolveOptions, 'platform' | 'app' | 'mode'>): TokenValue | undefined {
   if (opts?.app) {
     const a = theme.apps[opts.app]?.[id] ?? APPS[opts.app]?.overrides[id];
     if (a !== undefined) return a;
@@ -37,7 +37,21 @@ export function rawValue(theme: ThemeDoc, id: string, opts?: Pick<ResolveOptions
     const pv = theme.platforms[opts.platform]?.[id] ?? PLATFORM_DEFAULTS[opts.platform]?.[id];
     if (pv !== undefined) return pv;
   }
+  if (opts?.mode) {
+    const m = theme.modes?.[opts.mode]?.values[id];
+    if (m !== undefined) return m;
+  }
   return theme.values[id] ?? TOKEN_MAP.get(id)?.value;
+}
+
+/** A single-layer theme for one mode: shared values with that mode's overrides applied. Used for exports and comparisons. */
+export function flattenMode(theme: ThemeDoc, mode: ModeId): ThemeDoc {
+  return {
+    ...theme,
+    name: `${theme.name} · ${MODES[mode].label}`,
+    values: { ...theme.values, ...(theme.modes?.[mode]?.values ?? {}) },
+    modes: { lindemann: { values: {} }, diamond: { values: {} } },
+  };
 }
 
 export function pickMode(value: TokenValue, opts: Pick<ResolveOptions, 'appearance' | 'contrast'>): string {

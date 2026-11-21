@@ -2,15 +2,16 @@ import { ArrowRight, Layers, MonitorSmartphone, Package, SlidersHorizontal } fro
 import { Page, Section } from '../lab/Page';
 import { NAV } from '../shell/nav';
 import { href, navigate } from '../shell/router';
-import { useTheme } from '../state/store';
+import { useTheme, useView } from '../state/store';
 import { useResolvedTokens } from '../theme/ThemeScope';
-import { TOKENS } from '../tokens/registry';
+import { MODES, TOKENS } from '../tokens/registry';
 import { Badge, Button, Card, Icon } from '../ui';
 
 const FOUNDATION = ['ink', 'charcoal', 'slate', 'stone', 'linen', 'ivory', 'white', 'brick', 'brass'];
 
 const STATUS: [string, 'success' | 'warning' | 'neutral', string][] = [
   ['Design-token engine', 'success', 'Three layers, light/dark/high-contrast, platform and app overrides.'],
+  ['Lindemann & Diamond Stop modes', 'success', 'Shared system plus per-mode overrides; switch and scope edits from the top bar.'],
   ['Theme Editor', 'success', 'Search, linking, usage, undo/redo, presets, comparison, inspect mode.'],
   ['Foundations (6 editors)', 'success', 'Color, type, shape, spacing, icons, motion — each with demos.'],
   ['Component library', 'success', 'All requested components with forced-state galleries.'],
@@ -26,6 +27,7 @@ const STATUS: [string, 'success' | 'warning' | 'neutral', string][] = [
 
 export function Overview() {
   const theme = useTheme();
+  const view = useView();
   const t = useResolvedTokens();
   const counts = { foundation: 0, semantic: 0, component: 0 };
   TOKENS.forEach((d) => counts[d.layer]++);
@@ -64,7 +66,9 @@ export function Overview() {
           <div className="t-title3" style={{ marginTop: 4 }}>
             {theme.name}
           </div>
-          <div className="t-footnote c-secondary">{Object.keys(theme.values).length} overrides · {theme.density} density</div>
+          <div className="t-footnote c-secondary">
+            {MODES[view.mode].label} mode · {Object.keys(theme.values).length} shared changes · {theme.density} density
+          </div>
         </Card>
         {(['foundation', 'semantic', 'component'] as const).map((l) => (
           <Card padded key={l}>

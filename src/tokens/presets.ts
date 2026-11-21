@@ -1,4 +1,18 @@
-import type { ThemeDoc, TokenValue } from './types';
+import type { ModeId, ThemeDoc, TokenValue } from './types';
+
+export const FONT = {
+  georgiaPro: '"Georgia Pro", Georgia, "Times New Roman", serif',
+  ibmPlexSans: '"IBM Plex Sans", "Helvetica Neue", Arial, sans-serif',
+  avenirNext: '"Avenir Next", Avenir, "Segoe UI", "Helvetica Neue", Arial, sans-serif',
+  baskerville: 'Baskerville, "Baskerville Old Face", "Libre Baskerville", Georgia, serif',
+  ibmPlexMono: '"IBM Plex Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace',
+};
+
+/** Starting overrides for each mode. Everything not listed is shared. */
+export const DEFAULT_MODES: Record<ModeId, { values: Record<string, TokenValue> }> = {
+  lindemann: { values: { 'font.family.serif': FONT.georgiaPro, 'font.family.sans': FONT.ibmPlexSans } },
+  diamond: { values: { 'font.family.serif': FONT.baskerville, 'font.family.sans': FONT.avenirNext } },
+};
 
 const ld = (light: string, dark: string): TokenValue => ({ light, dark });
 
@@ -8,6 +22,7 @@ export function makeTheme(partial: Partial<ThemeDoc> & { id: string; name: strin
     updatedAt: 0,
     density: 'regular',
     values: {},
+    modes: JSON.parse(JSON.stringify(DEFAULT_MODES)),
     platforms: {},
     apps: {},
     ...partial,

@@ -34,6 +34,25 @@ to download configurations and token files.
 | 13 | Theme Editor | Every token: search, edit, link, usage inspection, undo/redo, presets, side-by-side comparison |
 | 14 | Documentation & Export | JSON tokens, CSS variables, SwiftUI, Markdown docs; saved configurations; import |
 
+## Modes: Lindemann and Diamond Stop
+
+The lab has two brand modes that share the whole system. Each mode stores only its own overrides.
+
+| | Lindemann | Diamond Stop |
+|---|---|---|
+| Display & headings (`font.family.serif`) | Georgia Pro | Baskerville |
+| Interface text (`font.family.sans`) | IBM Plex Sans | Avenir Next |
+| Monospace (`font.family.mono`, shared) | IBM Plex Mono on the web, SF Mono first on macOS/iOS/iPadOS | same |
+
+- Switch modes from the top bar. Every page, preview, app, report and export follows.
+- **Edits apply to** (top bar) chooses where an edit goes: *both modes* (shared) or *this mode only*.
+  Tokens a mode overrides show a "‹Mode› only" tag; resetting one in mode scope falls back to the shared value.
+- Theme Editor › Side-by-side compares the two modes and lists every difference.
+- Exports are per mode (choose the mode on the Export page). The JSON export also embeds both modes for re-import.
+- Fonts: IBM Plex Sans and IBM Plex Mono load from Google Fonts. Avenir Next, Baskerville, Georgia and SF Mono
+  ship with macOS. **Georgia Pro must be installed** (it comes with Microsoft Office/Microsoft 365, or from Monotype);
+  until then Georgia is shown. Typography shows whether each font is available on your device.
+
 The **inspect** button (crosshair, top bar) lets you click any element and see which tokens control it.
 
 ## Architecture

@@ -63,6 +63,9 @@ export interface TokenDef {
   scale?: 'density' | 'text';
 }
 
+/** Brand modes: each shares the system and adds its own overrides. */
+export type ModeId = 'lindemann' | 'diamond';
+
 export type AppId = 'inventory' | 'email' | 'scheduling' | 'finance' | 'admin' | 'analytics';
 
 /**
@@ -76,6 +79,8 @@ export interface ThemeDoc {
   updatedAt: number;
   density: Density;
   values: Record<string, TokenValue>;
+  /** Mode-specific overrides layered on top of the shared values. */
+  modes: Record<ModeId, { values: Record<string, TokenValue> }>;
   platforms: Partial<Record<Platform, Record<string, TokenValue>>>;
   apps: Partial<Record<AppId, Record<string, TokenValue>>>;
 }
@@ -85,6 +90,7 @@ export interface ResolveOptions {
   contrast?: Contrast;
   platform?: Platform;
   app?: AppId;
+  mode?: ModeId;
   density?: Density;
   textScale?: number;
   reducedMotion?: boolean;
